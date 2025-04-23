@@ -1,11 +1,16 @@
-# models/arima_model.py
-
+import logging
 from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
 
-def fit_arima(train_series, order=(5, 1, 0)):
-    model = ARIMA(train_series, order=order)
-    model_fit = model.fit()
-    return model_fit
+def fit_arima_model(series: pd.Series, order: tuple) -> ARIMA:
+    try:
+        model = ARIMA(series, order=order)
+        model_fit = model.fit()
+        logging.info(f"Fitted ARIMA{order} successfully.")
+        return model_fit
+    except Exception as e:
+        logging.error(f"Error fitting ARIMA{order}: {e}")
+        raise
 
-def forecast_arima(model_fit, steps=10):
+def forecast_arima(model_fit: ARIMA, steps: int) -> pd.Series:
     return model_fit.forecast(steps=steps)

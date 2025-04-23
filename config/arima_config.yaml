@@ -1,0 +1,7 @@
+data:
+  input_path: data/processed/national_demand.csv
+  resample_freq: D
+  forecast_horizon: 30
+
+model:
+  order: [5, 1, 0]

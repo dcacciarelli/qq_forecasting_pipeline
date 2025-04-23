@@ -1,11 +1,6 @@
-from pipelines.load_demand_data import load_and_merge_demand
-from utils.plotting import plot_univariate_timeseries
+import yaml
 
-folder_path = "data/raw"
-years = range(2019, 2025)
+with open("config/arima_config.yaml", "r") as f:
+    config = yaml.safe_load(f)
 
-df_demand = load_and_merge_demand(folder_path, years)
-
-plot_univariate_timeseries(df_demand, 'national_demand')
-
-df_demand.to_csv("data/processed/national_demand.csv")
+order = tuple(config["model"]["order"])
