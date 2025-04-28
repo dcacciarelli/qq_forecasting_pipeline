@@ -22,3 +22,13 @@ def plot_univariate_timeseries(df, column, y_range=None, title=None, figsize=(10
     plt.legend()
     plt.show()
 
+
+def plot_forecast_vs_actual(actual, forecast):
+    plt.figure(figsize=(10, 6))
+    plt.plot(actual.index, actual, label="Actual")
+    plt.plot(actual.index, forecast, label="Forecast", linestyle="--")
+    plt.title("Forecast vs Actual")
+    plt.legend()
+    plt.show()
+
+
