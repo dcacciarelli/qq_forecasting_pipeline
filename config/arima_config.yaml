@@ -1,7 +1,19 @@
 data:
-  input_path: data/processed/national_demand.csv
-  resample_freq: D
-  forecast_horizon: 30
+  folder_path: "data/raw"
+  years: [2019, 2020, 2021, 2022, 2023, 2024]
+  forecast_horizon: 48
+  initial_train_size: 48 * 365
+  step_size: 48
 
 model:
-  order: [5, 1, 0]
+  type: "ARIMA"
+  order: [1, 1, 1]    # initial guess
+  p_range: [0, 1, 2, 3]
+  d_range: [0, 1]
+  q_range: [0, 1, 2, 3]
+
+evaluation:
+  metric: "rmse"
+  save_forecast_plot: True
+  save_metrics_csv: True
+  output_dir: "outputs/"
