@@ -23,4 +23,11 @@ def load_and_merge_demand(folder_path: str, years: range) -> pd.DataFrame:
         all_years.append(df)
 
     df_all = pd.concat(all_years).sort_index()
+
+    # Remove duplicate timestamps safely
+    df_all = df_all[~df_all.index.duplicated(keep='first')]
+
+    # Now enforce 30min frequency
+    df_all = df_all.asfreq('30min')
+
     return df_all
