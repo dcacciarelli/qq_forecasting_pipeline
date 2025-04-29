@@ -1,40 +1,13 @@
-import yaml
-import logging
-import pandas as pd
 import joblib
-from src.qq_forecasting.data.load_demand_data import load_and_merge_demand
-from src.qq_forecasting.utils.metrics import evaluate_forecast
-from src.qq_forecasting.utils.plotting import plot_forecast_vs_actual
+from qq_forecasting.utils.metrics import evaluate_forecast
+from qq_forecasting.visualization.plotting import plot_forecast_vs_actual
 
-# Load config
-with open("../../../config/arima_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+def evaluate_arima_model(model_path, test_series, steps, plot=True):
+    model = joblib.load(model_path)
+    forecast = model.forecast(steps=steps)
+    metrics = evaluate_forecast(test_series, forecast)
 
-# Setup logging
-logging.basicConfig(filename='outputs/evaluate.log', level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    if plot:
+        plot_forecast_vs_actual(test_series, forecast)
 
-# Load data
-folder_path = config["data"]["folder_path"]
-years = range(config["data"]["years"][0], config["data"]["years"][-1]+1)
-df = load_and_merge_demand(folder_path=folder_path, years=years)
-series = df["national_demand"]
-
-# Load model
-model = joblib.load("outputs/arima_model.pkl")
-
-# Forecast
-forecast = model.forecast(steps=config["data"]["forecast_horizon"])
-test = series[-config["data"]["forecast_horizon"]:]
-
-# Evaluate
-metrics = evaluate_forecast(test, forecast)
-logging.info(f"Evaluation metrics: {metrics}")
-
-# Save metrics
-if config["evaluation"]["save_metrics_csv"]:
-    metrics_df = pd.DataFrame([metrics])
-    metrics_df.to_csv("outputs/evaluation_metrics.csv", index=False)
-
-# Plot
-if config["evaluation"]["save_forecast_plot"]:
-    plot_forecast_vs_actual(test, forecast)
+    return metrics

@@ -1,34 +1,60 @@
 import itertools
 import logging
+from tqdm import tqdm
 from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
 from qq_forecasting.utils.metrics import evaluate_forecast
 
-def tune_arima(series, p_values, d_values, q_values, initial_train_size, horizon=48, step=48):
+
+def tune_arima(train, val, p_values, d_values, q_values, P_values, D_values, Q_values, s, verbose=True):
+    """
+    Tune SARIMA hyperparameters based on validation set RMSE.
+
+    Args:
+        train (pd.Series): Training series.
+        val (pd.Series): Validation series.
+        p_values (list): List of p values.
+        d_values (list): List of d values.
+        q_values (list): List of q values.
+        P_values (list): List of seasonal P values.
+        D_values (list): List of seasonal D values.
+        Q_values (list): List of seasonal Q values.
+        s (int): Seasonal period (e.g., 48 for daily if half-hourly data).
+        verbose (bool): Whether to print/log progress.
+
+    Returns:
+        tuple: Best (order, seasonal_order) and best RMSE.
+    """
     best_score = float("inf")
-    best_cfg = None
+    best_order = None
+    best_seasonal_order = None
 
-    n = len(series)
+    param_grid = list(itertools.product(p_values, d_values, q_values,
+                                        P_values, D_values, Q_values))
 
-    for p, d, q in itertools.product(p_values, d_values, q_values):
+    if verbose:
+        print(f"Tuning {len(param_grid)} SARIMA configurations...")
+
+    for params in tqdm(param_grid, desc="Tuning SARIMA models", ncols=100):
+        p, d, q, P, D, Q = params
         order = (p, d, q)
+        seasonal_order = (P, D, Q, s)
+
         try:
-            errors = []
-            for i in range(initial_train_size, n - horizon, step):
-                train = series.iloc[:i]
-                test = series.iloc[i:i+horizon]
-                model = fit_arima_model(train, order)
-                forecast = forecast_arima(model, steps=horizon)
-                metrics = evaluate_forecast(test, forecast)
-                errors.append(metrics["rmse"])
-            mean_rmse = sum(errors) / len(errors)
+            model = fit_arima_model(train, order=order, seasonal_order=seasonal_order)
+            forecast = forecast_arima(model, steps=len(val))
+            score = evaluate_forecast(val, forecast)["rmse"]
 
-            if mean_rmse < best_score:
-                best_score = mean_rmse
-                best_cfg = order
+            logging.info(f"SARIMA{order}x{seasonal_order} RMSE={score:.2f}")
 
-            logging.info(f"ARIMA{order} - Mean RMSE: {mean_rmse:.2f}")
+            if score < best_score:
+                best_score = score
+                best_order = order
+                best_seasonal_order = seasonal_order
         except Exception as e:
-            logging.warning(f"ARIMA{order} failed: {e}")
+            logging.warning(f"Failed SARIMA{order}x{seasonal_order}: {e}")
             continue
 
-    return best_cfg, best_score
+    if verbose:
+        print(f"Best SARIMA configuration found: Order={best_order}, Seasonal Order={best_seasonal_order}, Validation RMSE={best_score:.2f}")
+
+    return best_order, best_seasonal_order, best_score
