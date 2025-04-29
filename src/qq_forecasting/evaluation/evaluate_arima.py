@@ -2,12 +2,12 @@ import yaml
 import logging
 import pandas as pd
 import joblib
-from pipelines.load_demand_data import load_and_merge_demand
-from utils.metrics import evaluate_forecast
-from utils.plotting import plot_forecast_vs_actual
+from src.qq_forecasting.data.load_demand_data import load_and_merge_demand
+from src.qq_forecasting.utils.metrics import evaluate_forecast
+from src.qq_forecasting.utils.plotting import plot_forecast_vs_actual
 
 # Load config
-with open("config/arima_config.yaml", "r") as f:
+with open("../../../config/arima_config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Setup logging

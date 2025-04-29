@@ -1,5 +1,5 @@
 import pandas as pd
-from models.arima_model import fit_arima_model, forecast_arima
+from src.qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
 
 def test_arima_fit_and_forecast():
     series = pd.Series([10, 12, 13, 15, 18, 20, 23])

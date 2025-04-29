@@ -1,6 +1,6 @@
 import itertools
 import logging
-from utils.cross_validation import walk_forward_cv
+from src.qq_forecasting.cross_validation.train_validation_split import walk_forward_cv
 
 def tune_arima(series, p_values, d_values, q_values, initial_train_size, horizon=48, step=48):
     """
