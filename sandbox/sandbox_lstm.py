@@ -46,7 +46,7 @@ train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=32, shuffl
 # ===============================
 model = SimpleLSTM()
 
-train_lstm(model, train_loader, num_epochs=100, lr=0.001)
+train_lstm(model, train_loader, num_epochs=10, lr=0.001)
 
 # ===============================
 # Make Predictions
