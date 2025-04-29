@@ -15,13 +15,14 @@ sys.path.append(os.path.abspath("src"))
 # Imports
 # ===============================
 import joblib
+import yaml
 import pandas as pd
 from qq_forecasting.data.load_demand import load_demand_data
 from qq_forecasting.data.splits import train_val_test_split
 from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
 from qq_forecasting.tuning.tuning_arima import tune_arima
 from qq_forecasting.training.train_arima import train_final_arima
-from qq_forecasting.evaluation.evaluate_arima import evaluate_arima_model
+from qq_forecasting.evaluation.evaluate_arima import evaluate_arima
 from qq_forecasting.visualization.plotting import plot_univariate_timeseries, plot_forecast_vs_actual
 
 # ===============================
@@ -56,6 +57,22 @@ best_order, best_seasonal_order, best_rmse = tune_arima(
     s
 )
 
+# ===============================
+# Save Best Hyperparameters
+# ===============================
+best_params = {
+    "order": list(best_order),
+    "seasonal_order": list(best_seasonal_order),
+    "seasonality_period": s,
+    "validation_rmse": float(best_rmse)
+}
+
+os.makedirs("outputs/params", exist_ok=True)
+with open("outputs/params/best_sarima_params.yaml", "w") as f:
+    yaml.dump(best_params, f)
+
+print("Best SARIMA parameters saved to outputs/params/best_sarima_params.yaml")
+
 
 # ===============================
 # Train Final Model (train + val)
@@ -67,10 +84,5 @@ train_final_arima(train_val, order=best_order, seasonal_order=best_seasonal_orde
 # ===============================
 # Load Model and Evaluate on Test Set
 # ===============================
-metrics = evaluate_arima_model(
-    model_path="outputs/models/sarima_model.pkl",
-    test_series=test,
-    steps=len(test),
-    plot=True
-)
+metrics = evaluate_arima(config_path="config/arima_config.yaml", model_path="outputs/models/sarima_model.pkl")
 print(f"Test Metrics: {metrics}")
