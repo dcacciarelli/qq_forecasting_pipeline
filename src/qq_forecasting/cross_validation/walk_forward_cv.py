@@ -1,7 +1,9 @@
+# src/qq_forecasting/cross_validation/walk_forward_cv.py
+
 import numpy as np
-from models.arima_model import fit_arima_model, forecast_arima
-from utils.metrics import evaluate_forecast
 import logging
+from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
+from qq_forecasting.utils.metrics import evaluate_forecast
 
 def walk_forward_cv(series, order, initial_train_size, horizon=48, step=48):
     """

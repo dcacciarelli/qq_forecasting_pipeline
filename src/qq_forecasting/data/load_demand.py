@@ -1,8 +1,8 @@
 import os
 import pandas as pd
-from utils.preprocessing import add_minutes_from_SP, add_datetime_index
+from src.qq_forecasting.utils.preprocessing import add_minutes_from_SP, add_datetime_index
 
-def load_and_merge_demand(folder_path: str, years: range) -> pd.DataFrame:
+def load_demand_data(folder_path: str, years: range) -> pd.DataFrame:
     """
     Loads, processes and merges national demand data across multiple years.
 
