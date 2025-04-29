@@ -60,7 +60,6 @@ best_order, best_seasonal_order, best_rmse = tune_arima(
 # ===============================
 # Train Final Model (train + val)
 # ===============================
-print("Training final SARIMA model...")
 train_val = pd.concat([train, val])
 os.makedirs('outputs/models', exist_ok=True)
 train_final_arima(train_val, order=best_order, seasonal_order=best_seasonal_order, save_path="outputs/models/sarima_model.pkl")
@@ -68,7 +67,6 @@ train_final_arima(train_val, order=best_order, seasonal_order=best_seasonal_orde
 # ===============================
 # Load Model and Evaluate on Test Set
 # ===============================
-print("Evaluating on test set...")
 metrics = evaluate_arima_model(
     model_path="outputs/models/sarima_model.pkl",
     test_series=test,
