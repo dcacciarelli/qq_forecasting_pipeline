@@ -14,22 +14,20 @@ sys.path.append(os.path.abspath("src"))
 # ===============================
 # Imports
 # ===============================
-import joblib
 import yaml
 import pandas as pd
 from qq_forecasting.data.load_demand import load_demand_data
 from qq_forecasting.data.splits import train_val_test_split
-from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
 from qq_forecasting.tuning.tuning_arima import tune_arima
 from qq_forecasting.training.train_arima import train_final_arima
 from qq_forecasting.evaluation.evaluate_arima import evaluate_arima
-from qq_forecasting.visualization.plotting import plot_univariate_timeseries, plot_forecast_vs_actual
+from qq_forecasting.utils.plotting import plot_univariate_timeseries
 
 # ===============================
 # Load Data
 # ===============================
 df = load_demand_data("data/raw", years=[2019, 2020, 2021, 2022, 2023, 2024])
-series = df["national_demand"][:1000]  # limit for faster experimentation
+series = df["ND"][:1_000]  # limit for faster experimentation
 plot_univariate_timeseries(series, xlabel="Date", ylabel="Demand [MW]")
 
 # ===============================
