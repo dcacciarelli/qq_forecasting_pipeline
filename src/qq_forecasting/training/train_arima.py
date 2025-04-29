@@ -1,39 +1,42 @@
-import os
+# src/qq_forecasting/training/train_sarima.py
+
 import yaml
-import logging
-import joblib
+import os
 import pandas as pd
-
+import joblib
 from qq_forecasting.data.load_demand import load_demand_data
+from qq_forecasting.data.splits import train_val_test_split
 from qq_forecasting.models.arima_model import fit_arima_model
-from qq_forecasting.tuning.tuning_arima import tune_arima
 
-# Setup logging
-os.makedirs('outputs', exist_ok=True)
-logging.basicConfig(filename='outputs/train_arima.log', level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+def train_final_arima(config_path="config/arima_config.yaml", params_path="outputs/params/best_sarima_params.yaml"):
+    # Load configs
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    with open(params_path, "r") as f:
+        best_params = yaml.safe_load(f)
 
-# Load config
-with open("config/arima_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+    # Load data
+    df = load_demand_data(config["data"]["folder_path"], years=config["data"]["years"])
+    series = df["national_demand"]
+    if config["data"]["max_samples"]:
+        series = series[:config["data"]["max_samples"]]
 
-# Load and prepare data
-df = load_demand_data(config["data"]["folder_path"], config["data"]["years"])
-series = df["national_demand"]
+    # Split
+    train, val, _ = train_val_test_split(series, config["split"]["val_size"], config["split"]["test_size"])
+    train_val = pd.concat([train, val])
 
-# Hyperparameter tuning
-p_values = config["model"]["p_range"]
-d_values = config["model"]["d_range"]
-q_values = config["model"]["q_range"]
-initial_train_size = config["data"]["initial_train_size"]
-horizon = config["data"]["forecast_horizon"]
-step = config["data"]["step_size"]
+    # Fit
+    model = fit_arima_model(
+        train_val,
+        order=tuple(best_params["order"]),
+        seasonal_order=tuple(best_params["seasonal_order"]),
+        disp=True
+    )
 
-best_order, best_rmse = tune_arima(series, p_values, d_values, q_values, initial_train_size, horizon, step)
-logging.info(f"Best ARIMA order: {best_order} with RMSE={best_rmse:.2f}")
+    # Save
+    os.makedirs("outputs/models", exist_ok=True)
+    joblib.dump(model, "outputs/models/sarima_model.pkl")
+    print("✅ SARIMA model trained and saved to outputs/models/sarima_model.pkl")
 
-# Train final model
-final_model = fit_arima_model(series, best_order)
-
-# Save model
-joblib.dump(final_model, "outputs/models/arima_model.pkl")
-logging.info("Final ARIMA model saved successfully.")
+if __name__ == "__main__":
+    train_final_arima()

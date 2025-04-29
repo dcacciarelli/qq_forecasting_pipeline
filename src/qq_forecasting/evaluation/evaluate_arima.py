@@ -1,40 +1,49 @@
+# src/qq_forecasting/evaluation/evaluate_sarima.py
+
 import yaml
-import logging
+import os
 import pandas as pd
 import joblib
-from src.qq_forecasting.data.load_demand_data import load_and_merge_demand
-from src.qq_forecasting.utils.metrics import evaluate_forecast
-from src.qq_forecasting.utils.plotting import plot_forecast_vs_actual
+from qq_forecasting.data.load_demand import load_demand_data
+from qq_forecasting.data.splits import train_val_test_split
+from qq_forecasting.utils.metrics import evaluate_forecast
+from qq_forecasting.visualization.plotting import plot_forecast_vs_actual
 
-# Load config
-with open("../../../config/arima_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+def evaluate_arima(config_path="config/arima_config.yaml", model_path="outputs/models/sarima_model.pkl"):
+    # Load config
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
 
-# Setup logging
-logging.basicConfig(filename='outputs/evaluate.log', level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    # Load data
+    df = load_demand_data(config["data"]["folder_path"], years=config["data"]["years"])
+    series = df["national_demand"]
+    if config["data"]["max_samples"]:
+        series = series[:config["data"]["max_samples"]]
 
-# Load data
-folder_path = config["data"]["folder_path"]
-years = range(config["data"]["years"][0], config["data"]["years"][-1]+1)
-df = load_and_merge_demand(folder_path=folder_path, years=years)
-series = df["national_demand"]
+    # Split
+    _, _, test = train_val_test_split(series, config["split"]["val_size"], config["split"]["test_size"])
 
-# Load model
-model = joblib.load("outputs/arima_model.pkl")
+    # Load model
+    model = joblib.load(model_path)
 
-# Forecast
-forecast = model.forecast(steps=config["data"]["forecast_horizon"])
-test = series[-config["data"]["forecast_horizon"]:]
+    # Forecast
+    forecast = model.forecast(steps=len(test))
 
-# Evaluate
-metrics = evaluate_forecast(test, forecast)
-logging.info(f"Evaluation metrics: {metrics}")
+    # Evaluate
+    metrics = evaluate_forecast(test, forecast)
 
-# Save metrics
-if config["evaluation"]["save_metrics_csv"]:
-    metrics_df = pd.DataFrame([metrics])
-    metrics_df.to_csv("outputs/evaluation_metrics.csv", index=False)
+    # Save metrics
+    os.makedirs("outputs/metrics", exist_ok=True)
+    metrics_path = "outputs/metrics/test_metrics.yaml"
+    with open(metrics_path, "w") as f:
+        yaml.dump(metrics, f)
 
-# Plot
-if config["evaluation"]["save_forecast_plot"]:
+    print(f"✅ Test metrics saved to {metrics_path}")
+
+    # Plot
     plot_forecast_vs_actual(test, forecast)
+
+    return metrics
+
+if __name__ == "__main__":
+    evaluate_arima()

@@ -1,19 +1,17 @@
 data:
   folder_path: "data/raw"
   years: [2019, 2020, 2021, 2022, 2023, 2024]
-  forecast_horizon: 48
-  initial_train_size: 48 * 365
-  step_size: 48
+  max_samples:          # Limit for faster experiments (None = use all)
+
+split:
+  val_size: 300
+  test_size: 300
 
 model:
-  type: "ARIMA"
-  order: [1, 1, 1]    # initial guess
-  p_range: [0, 1, 2, 3]
-  d_range: [0, 1]
-  q_range: [0, 1, 2, 3]
-
-evaluation:
-  metric: "rmse"
-  save_forecast_plot: True
-  save_metrics_csv: True
-  output_dir: "outputs/"
+  p_values: [0, 1, 2]
+  d_values: [0, 1]
+  q_values: [0, 1, 2]
+  P_values: [0, 1]
+  D_values: [0, 1]
+  Q_values: [0, 1]
+  seasonality_period: 48
