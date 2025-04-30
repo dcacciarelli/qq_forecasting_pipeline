@@ -30,7 +30,7 @@ from qq_forecasting.utils.plotting import plot_forecast_vs_actual, plot_univaria
 # ===============================
 # Load data
 df = load_demand_data("data/raw", years=[2019, 2020, 2021, 2022, 2023, 2024])
-series = df["ND"][:50_000]  # Up to 10,000 samples
+series = df["ND"][:5_000]  # Up to 10,000 samples
 
 # Split before scaling
 split_idx = int(len(series) * 0.8)
@@ -60,7 +60,7 @@ train_lstm(model, train_loader, num_epochs=10, lr=0.01)
 # ===============================
 # Make Predictions
 # ===============================
-predictions = predict_lstm(model, X_test)
+predictions = predict_lstm()
 
 # Inverse transform predictions and actuals
 y_test_inv = scaler.inverse_transform(y_test.numpy().reshape(-1, 1)).flatten()

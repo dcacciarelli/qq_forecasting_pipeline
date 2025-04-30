@@ -1,0 +1,27 @@
+data:
+  folder_path: data/raw
+  years: [2019, 2020, 2021, 2022, 2023, 2024]
+  column_name: ND
+  max_samples: 10000
+
+split:
+  train_ratio: 0.8
+
+model:
+  input_size: 1
+  feature_size: 64
+  num_layers: 2
+  dropout: 0.1
+  nhead: 8
+  input_window: 96
+  output_window: 1
+
+training:
+  device: cpu
+  batch_size: 64
+  learning_rate: 0.001
+  epochs: 50
+
+paths:
+  model_path: outputs/models/transformer_model.pth
+  scaler_path: outputs/models/transformer_scaler.pkl

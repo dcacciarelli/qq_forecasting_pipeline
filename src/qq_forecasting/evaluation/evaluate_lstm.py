@@ -10,7 +10,7 @@ from qq_forecasting.utils.lstm_preprocessing import create_sliding_windows
 from qq_forecasting.models.lstm_model import LSTM
 from qq_forecasting.utils.plotting import plot_forecast_vs_actual
 
-def main(config_path="config/lstm_config.yaml"):
+def predict_lstm(config_path="config/lstm_config.yaml"):
     # Load config
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -51,4 +51,4 @@ def main(config_path="config/lstm_config.yaml"):
 
 
 if __name__ == "__main__":
-    main()
+    predict_lstm()
