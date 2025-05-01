@@ -4,8 +4,8 @@ import warnings
 
 import pandas as pd
 from tqdm import tqdm
-from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
-from qq_forecasting.utils.metrics import evaluate_forecast
+from qq_forecasting.arima.arima_model import fit_arima_model, forecast_arima
+from qq_forecasting.common.metrics import evaluate_forecast
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
 # Suppress annoying convergence warnings from statsmodels

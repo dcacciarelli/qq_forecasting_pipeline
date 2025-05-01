@@ -16,12 +16,12 @@ sys.path.append(os.path.abspath("src"))
 # ===============================
 import yaml
 import pandas as pd
-from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.data.splits import train_val_test_split
-from qq_forecasting.tuning.tuning_arima import tune_arima
-from qq_forecasting.training.train_arima import train_final_arima
-from qq_forecasting.evaluation.evaluate_arima import evaluate_arima
-from qq_forecasting.utils.plotting import plot_univariate_timeseries
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.splits import train_val_test_split
+from qq_forecasting.arima.tuning_arima import tune_arima
+from qq_forecasting.arima.train_arima import train_final_arima
+from qq_forecasting.arima.evaluate_arima import evaluate_arima
+from qq_forecasting.common.plotting import plot_univariate_timeseries
 
 # ===============================
 # Load Data

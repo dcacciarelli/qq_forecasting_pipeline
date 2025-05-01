@@ -4,9 +4,10 @@ import yaml
 import os
 import pandas as pd
 import joblib
-from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.data.splits import train_val_test_split
-from qq_forecasting.models.arima_model import fit_arima_model
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.splits import train_val_test_split
+from qq_forecasting.arima.arima_model import fit_arima_model
+
 
 def train_final_arima(config_path="config/arima_config.yaml", params_path="outputs/params/best_sarima_params.yaml"):
     # Load configs

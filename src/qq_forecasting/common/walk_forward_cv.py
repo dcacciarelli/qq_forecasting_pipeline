@@ -2,8 +2,8 @@
 
 import numpy as np
 import logging
-from qq_forecasting.models.arima_model import fit_arima_model, forecast_arima
-from qq_forecasting.utils.metrics import evaluate_forecast
+from qq_forecasting.arima.arima_model import fit_arima_model, forecast_arima
+from qq_forecasting.common.metrics import evaluate_forecast
 
 def walk_forward_cv(series, order, initial_train_size, horizon=48, step=48):
     """

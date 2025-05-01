@@ -2,10 +2,9 @@
 
 import yaml
 import os
-import pandas as pd
-from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.data.splits import train_val_test_split
-from qq_forecasting.tuning.tuning_arima import tune_arima
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.splits import train_val_test_split
+from qq_forecasting.arima.tuning_arima import tune_arima
 
 def run_arima_tuning(config_path="config/arima_config.yaml"):
     # Load config

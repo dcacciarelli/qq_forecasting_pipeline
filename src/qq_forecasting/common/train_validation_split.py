@@ -1,4 +1,4 @@
-from src.qq_forecasting.utils.metrics import evaluate_forecast
+from src.qq_forecasting.common.metrics import evaluate_forecast
 import logging
 
 def train_validation_split_evaluation(series, model_func, predict_func, model_args={}, forecast_horizon=None, train_ratio=0.8):

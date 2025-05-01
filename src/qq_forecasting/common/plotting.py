@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 
 # Plot one variable
-# src/qq_forecasting/utils/plotting.py
+# src/qq_forecasting/common/plotting.py
 
 import matplotlib.pyplot as plt
 import pandas as pd
