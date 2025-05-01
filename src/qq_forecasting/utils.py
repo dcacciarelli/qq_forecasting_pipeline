@@ -176,10 +176,6 @@ def plot_univariate_timeseries(
 
 
 def forecast_metrics(actual, forecast, save_path=None, print_scores=False):
-
-    actual = np.array(actual)
-    forecast = np.array(forecast)
-
     mse = mean_squared_error(actual, forecast)
     rmse = np.sqrt(mse)
     mae = mean_absolute_error(actual, forecast)
@@ -203,22 +199,22 @@ def forecast_metrics(actual, forecast, save_path=None, print_scores=False):
     return metrics
 
 
-def plot_forecast_vs_actual(actual, forecast, save_path=None, title="Forecast vs Actual"):
-
-    actual = np.array(actual)
-    forecast = np.array(forecast)
-
+def plot_forecast_vs_actual(actual, forecast, save_path=None, title=None):
     plt.figure(figsize=(10, 6), dpi=300)
-    plt.plot(actual, label="Actual")
-    plt.plot(forecast, label="Forecast", linestyle="--")
+    plt.plot(actual, label="Actual", c="k")
+    plt.plot(forecast, label="Forecast", linestyle="--", c="r")
     plt.title(title)
     plt.legend()
-    plt.show()
+    plt.tight_layout()
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path)
+        plt.show()
         plt.close()
+    else:
+        plt.show()
+
 
 
 
