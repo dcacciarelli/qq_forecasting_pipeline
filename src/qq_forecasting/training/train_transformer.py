@@ -23,7 +23,7 @@ def train(model, train_data, optimizer, criterion, scheduler, batch_size, epoch)
     scheduler.step()
 
 
-def evaluate(model, val_data, criterion, input_window, batch_size):
+def evaluate(model, val_data, criterion, batch_size):
     model.eval()
     total_loss = 0.0
     with torch.no_grad():

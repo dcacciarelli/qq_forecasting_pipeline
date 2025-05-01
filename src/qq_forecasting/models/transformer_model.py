@@ -36,12 +36,12 @@ class TransformerEncoder(nn.Module):
 
     def forward(self, x):
         # x: (seq_len, batch_size, input_dim)
-        x = self.embedding_layer(x)  # Embedding layer: project scalar to latent
+        x = self.embedding_layer(x)
         if self.src_mask is None or self.src_mask.size(0) != len(x):
             self.src_mask = self._generate_square_subsequent_mask(len(x)).to(x.device)
         x = x + self.pos_encoder(x)
         output = self.transformer_encoder(x, self.src_mask)
-        return self.decoder(output)
+        return self.decoder(output[-1, :, :])  # only take last time step
 
     def _generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)

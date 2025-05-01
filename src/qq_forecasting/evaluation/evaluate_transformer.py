@@ -10,8 +10,7 @@ from qq_forecasting.training.train_transformer import train, evaluate
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Running on {device}")
 
-input_window = 10
-output_window = 1
+window_size = 10
 batch_size = 64
 lr = 0.00005
 epochs = 10
@@ -21,7 +20,7 @@ series = df["ND"].values[:1_000]
 scaler = MinMaxScaler()
 series_scaled = scaler.fit_transform(series.reshape(-1, 1)).flatten()
 
-train_data, val_data = get_data_split(series_scaled, 0.8, input_window, output_window, device)
+train_data, val_data = get_data_split(series_scaled, 0.8, window_size, device)
 model = TransformerEncoder().to(device)
 
 criterion = torch.nn.MSELoss()
@@ -31,7 +30,7 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 for epoch in range(1, epochs + 1):
     train(model, train_data, optimizer, criterion, scheduler, batch_size, epoch)
     if epoch == epochs:
-        val_loss = evaluate(model, val_data, criterion, input_window, batch_size)
+        val_loss = evaluate(model, val_data, criterion, batch_size)
         print(f"Validation loss at final epoch: {val_loss:.6f}")
 
 # Forecast
