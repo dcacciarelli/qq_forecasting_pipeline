@@ -1,11 +1,12 @@
 import os
 import joblib
+import numpy as np
 import pandas as pd
 import warnings
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
 from qq_forecasting.arima.arima_model import fit_arima, forecast_arima, tune_arima
-from qq_forecasting.utils import forecast_metrics, plot_forecast_vs_actual
+from qq_forecasting.utils import inverse_scale, forecast_metrics, plot_forecast_vs_actual
 
 
 # Suppress annoying convergence warnings from statsmodels
@@ -29,7 +30,7 @@ D_values = [0]
 Q_values = [1]
 
 # ===== LOAD DATA =====
-train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).iloc[:1000, :]
+train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).iloc[:200, :]
 val = pd.read_csv(os.path.join(DATA_PATH, "val.csv"))
 test = pd.read_csv(os.path.join(DATA_PATH, "test.csv"))
 
@@ -56,6 +57,13 @@ model = joblib.load(MODEL_SAVE_PATH)
 # ===== FORECAST =====
 forecast = forecast_arima(model, steps=len(test))
 
+# ===== LOAD SCALER =====
+scaler = joblib.load(os.path.join(DATA_PATH, "scaler.pkl"))
+
+# ===== INVERSE SCALE =====
+forecast_inv = inverse_scale(np.array(forecast), scaler)
+test_inv = inverse_scale(test.values, scaler)
+
 # ===== EVALUATE & PLOT =====
-metrics = forecast_metrics(test, forecast, save_path=METRICS_SAVE_PATH, print_scores=True)
-plot_forecast_vs_actual(test, forecast, save_path=PLOT_SAVE_PATH)
+metrics = forecast_metrics(test_inv, forecast_inv, save_path=METRICS_SAVE_PATH, print_scores=True)
+plot_forecast_vs_actual(test_inv, forecast_inv, save_path=PLOT_SAVE_PATH)
