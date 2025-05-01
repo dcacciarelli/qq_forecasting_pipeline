@@ -46,3 +46,25 @@ class TransformerEncoder(nn.Module):
     def _generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
         return mask.float().masked_fill(mask == 0, float("-inf")).masked_fill(mask == 1, 0.0)
+
+
+def train(model, dataloader, num_epochs=10, lr=0.001, scheduler=None):
+    model.train()
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+
+    for epoch in range(num_epochs):
+        epoch_loss = 0.0
+        for X_batch, y_batch in dataloader:
+            X_batch = X_batch.transpose(0, 1)  # (seq_len, batch_size, 1)
+            optimizer.zero_grad()
+            output = model(X_batch)
+            loss = criterion(output, y_batch)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+
+        if scheduler:
+            scheduler.step()
+
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataloader):.4f}")

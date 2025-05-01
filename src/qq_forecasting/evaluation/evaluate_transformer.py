@@ -1,52 +1,52 @@
+import yaml
+import os
 import torch
+import joblib
+import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
+
 from qq_forecasting.data.load_demand import load_demand_data
+from qq_forecasting.utils.preprocessing import create_sliding_windows
 from qq_forecasting.models.transformer_model import TransformerEncoder
-from qq_forecasting.utils.transformer_preprocessing import get_data_split, get_batch
-from qq_forecasting.training.train_transformer import train, evaluate
+from qq_forecasting.utils.plotting import plot_forecast_vs_actual
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Running on {device}")
 
-window_size = 10
-batch_size = 64
-lr = 0.00005
-epochs = 10
+def main(config_path="config/transformer_config.yaml"):
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
 
-df = load_demand_data("data/raw", years=[2019, 2020, 2021, 2022, 2023, 2024])
-series = df["ND"].values[:1_000]
-scaler = MinMaxScaler()
-series_scaled = scaler.fit_transform(series.reshape(-1, 1)).flatten()
+    model = TransformerEncoder()
+    model.load_state_dict(torch.load(config["paths"]["model_path"]))
+    model.eval()
 
-train_data, val_data = get_data_split(series_scaled, 0.8, window_size, device)
-model = TransformerEncoder().to(device)
+    scaler = joblib.load(config["paths"]["scaler_path"])
 
-criterion = torch.nn.MSELoss()
-optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    df = load_demand_data(config["data"]["folder_path"], years=config["data"]["years"])
+    series = df[config["data"]["column_name"]]
+    if config["data"]["max_samples"]:
+        series = series[:config["data"]["max_samples"]]
 
-for epoch in range(1, epochs + 1):
-    train(model, train_data, optimizer, criterion, scheduler, batch_size, epoch)
-    if epoch == epochs:
-        val_loss = evaluate(model, val_data, criterion, batch_size)
-        print(f"Validation loss at final epoch: {val_loss:.6f}")
+    split_idx = int(len(series) * config["split"]["train_size"])
+    test_series = series[split_idx:]
 
-# Forecast
-model.eval()
-pred, actual = torch.Tensor(0), torch.Tensor(0)
-with torch.no_grad():
-    for i in range(len(val_data) - 1):
-        x, y = get_batch(val_data, i, 1)
-        out = model(x)
-        pred = torch.cat((pred, out[-1].view(-1).cpu()), 0)
-        actual = torch.cat((actual, y[-1].view(-1).cpu()), 0)
+    scaled_test = scaler.transform(test_series.values.reshape(-1, 1)).flatten()
+    X_test, y_test = create_sliding_windows(scaled_test, config["split"]["window_size"])
 
-plt.plot(actual, label="Actual", color="red", alpha=0.7)
-plt.plot(pred, label="Forecast", color="blue", linestyle="dashed")
-plt.title("Transformer Forecast on Demand")
-plt.xlabel("Time Steps")
-plt.legend()
-plt.tight_layout()
-plt.show()
+    with torch.no_grad():
+        predictions = []
+        for x in X_test:
+            x = x.unsqueeze(1).transpose(0, 1)  # (seq_len, 1, 1)
+            out = model(x)
+            predictions.append(out[-1].view(-1).item())  # forces flatten to 1D, then extracts the scalar
+
+    predictions = np.array(predictions)
+    predictions_inv = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+    y_test_inv = scaler.inverse_transform(y_test.numpy().reshape(-1, 1)).flatten()
+
+    plot_forecast_vs_actual(y_test_inv, predictions_inv)
+
+
+if __name__ == "__main__":
+    main()

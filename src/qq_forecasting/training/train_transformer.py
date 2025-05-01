@@ -1,34 +1,52 @@
+import yaml
+import os
 import torch
-import time
+import joblib
+import pandas as pd
+import numpy as np
+from torch.utils.data import TensorDataset, DataLoader
+from sklearn.preprocessing import MinMaxScaler
 
-from qq_forecasting.utils.transformer_preprocessing import get_batch
-
-def train(model, train_data, optimizer, criterion, scheduler, batch_size, epoch):
-    model.train()
-    total_loss, start_time = 0.0, time.time()
-
-    for batch, i in enumerate(range(0, len(train_data) - 1, batch_size)):
-        x, y = get_batch(train_data, i, batch_size)
-        optimizer.zero_grad()
-        output = model(x)
-        loss = criterion(output, y)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.7)
-        optimizer.step()
-        total_loss += loss.item()
-
-        if batch % 10 == 0 and batch > 0:
-            print(f"| epoch {epoch} | batch {batch} | loss {loss.item():.6f}")
-
-    scheduler.step()
+from qq_forecasting.data.load_demand import load_demand_data
+from qq_forecasting.utils.preprocessing import create_sliding_windows
+from qq_forecasting.models.transformer_model import TransformerEncoder, train
 
 
-def evaluate(model, val_data, criterion, batch_size):
-    model.eval()
-    total_loss = 0.0
-    with torch.no_grad():
-        for i in range(0, len(val_data) - 1, batch_size):
-            x, y = get_batch(val_data, i, batch_size)
-            output = model(x)
-            total_loss += len(x[0]) * criterion(output, y).cpu().item()
-    return total_loss / len(val_data)
+def main(config_path="config/transformer_config.yaml"):
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+
+    df = load_demand_data(config["data"]["folder_path"], years=config["data"]["years"])
+    series = df[config["data"]["column_name"]]
+    if config["data"]["max_samples"]:
+        series = series[:config["data"]["max_samples"]]
+
+    split_idx = int(len(series) * config["split"]["train_size"])
+    train_series = series[:split_idx]
+
+    scaler = MinMaxScaler()
+    scaled_train = scaler.fit_transform(train_series.values.reshape(-1, 1)).flatten()
+    X_train, y_train = create_sliding_windows(scaled_train, config["split"]["window_size"])
+
+    train_loader = DataLoader(
+        TensorDataset(X_train, y_train),
+        batch_size=config["training"]["batch_size"],
+        shuffle=True
+    )
+
+    model = TransformerEncoder().to("cuda" if torch.cuda.is_available() else "cpu")
+    train(
+        model,
+        train_loader,
+        num_epochs=config["training"]["num_epochs"],
+        lr=config["training"]["learning_rate"]
+    )
+
+    os.makedirs(os.path.dirname(config["paths"]["model_path"]), exist_ok=True)
+    torch.save(model.state_dict(), config["paths"]["model_path"])
+    joblib.dump(scaler, config["paths"]["scaler_path"])
+    print("✅ Transformer model and scaler saved.")
+
+
+if __name__ == "__main__":
+    main()
