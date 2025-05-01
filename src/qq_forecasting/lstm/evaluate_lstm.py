@@ -2,10 +2,10 @@ import yaml
 import torch
 import joblib
 
-from qq_forecasting.utils.load_demand import load_demand_data
-from qq_forecasting.utils.preprocessing import create_sliding_windows
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.preprocessing import create_sliding_windows
 from qq_forecasting.lstm.lstm_model import LSTM
-from qq_forecasting.utils.plotting import plot_forecast_vs_actual
+from qq_forecasting.common.plotting import plot_forecast_vs_actual
 
 def predict_lstm(config_path="config/lstm_config.yaml"):
     # Load config

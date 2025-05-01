@@ -2,28 +2,43 @@ import numpy as np
 import pandas as pd
 import torch
 import os
-from typing import List, Optional, Tuple, Literal, Union
-from sklearn.preprocessing import MinMaxScaler
+from typing import List, Optional, Tuple, Literal
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
-def load_csv_data(folder_path: str, years: List[int], filename_pattern: str = "demanddata_{year}.csv") -> pd.DataFrame:
+def merge_datasets(
+        folder_path: str,
+        years: List[int],
+        column: Optional[str] = None,
+        filename_pattern: str = "demanddata_{year}.csv"
+) -> Union[pd.DataFrame, pd.Series]:
     """
     Load and concatenate CSVs from a folder based on a filename pattern.
+    Optionally extract a single column as a Series.
 
     Args:
         folder_path (str): Path to the folder with CSVs.
         years (List[int]): List of years to load.
+        column (str, optional): Name of the column to extract as Series.
         filename_pattern (str): Filename format string with `{year}` placeholder.
 
     Returns:
-        pd.DataFrame: Concatenated dataframe.
+        Union[pd.DataFrame, pd.Series]: Concatenated dataframe or series.
     """
     dataframes = []
     for year in years:
         file_path = os.path.join(folder_path, filename_pattern.format(year=year))
         df = pd.read_csv(file_path)
         dataframes.append(df)
-    return pd.concat(dataframes, ignore_index=True)
+
+    full_df = pd.concat(dataframes, ignore_index=True)
+
+    if column:
+        if column not in full_df.columns:
+            raise ValueError(f"Column '{column}' not found in data.")
+        return full_df[column]
+
+    return full_df
 
 
 def split_series(series: pd.Series, val_size: int = 0, test_size: int = 0) -> Tuple[pd.Series, Optional[pd.Series], Optional[pd.Series]]:
@@ -51,7 +66,7 @@ def split_series(series: pd.Series, val_size: int = 0, test_size: int = 0) -> Tu
     return train, val, test
 
 
-def preprocess_series(series: pd.Series, method: Literal["interpolate", "ffill", "bfill"] = "interpolate") -> pd.Series:
+def fill_series(series: pd.Series, method: Literal["interpolate", "ffill", "bfill"] = "interpolate") -> pd.Series:
     """
     Preprocess a time series by filling missing values.
 
@@ -72,19 +87,16 @@ def preprocess_series(series: pd.Series, method: Literal["interpolate", "ffill",
         raise ValueError(f"Unsupported fill method: {method}")
 
 
-def scale_series(series: pd.Series) -> Tuple[np.ndarray, MinMaxScaler]:
-    """
-    Scale a series to [0, 1] and return the scaled values and the scaler.
+def scale_series(series: pd.Series, method: str = "minmax") -> Tuple[np.ndarray, MinMaxScaler]:
+    if method == "minmax":
+        scaler = MinMaxScaler()
+    elif method == "standard":
+        scaler = StandardScaler()
+    else:
+        raise ValueError(f"Unsupported scaler: {method}")
 
-    Args:
-        series (pd.Series): Series to scale.
-
-    Returns:
-        Tuple[np.ndarray, MinMaxScaler]: (scaled values, fitted scaler)
-    """
-    scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(series.values.reshape(-1, 1)).flatten()
-    return scaled, scaler
+    series_scaled = scaler.fit_transform(series.values.reshape(-1, 1)).flatten()
+    return series_scaled, scaler
 
 
 def inverse_scale(scaled_data: np.ndarray, scaler: MinMaxScaler) -> np.ndarray:

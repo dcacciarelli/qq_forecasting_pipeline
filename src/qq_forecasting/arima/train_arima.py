@@ -4,8 +4,8 @@ import yaml
 import os
 import pandas as pd
 import joblib
-from qq_forecasting.utils.load_demand import load_demand_data
-from qq_forecasting.utils.splits import train_val_test_split
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.splits import train_val_test_split
 from qq_forecasting.arima.arima_model import fit_arima_model
 
 

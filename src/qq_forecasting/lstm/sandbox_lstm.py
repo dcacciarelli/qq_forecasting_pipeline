@@ -15,12 +15,12 @@ sys.path.append(os.path.abspath("src"))
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
 
-from qq_forecasting.utils.load_demand import load_demand_data
-from qq_forecasting.utils.preprocessing import create_sliding_windows
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.preprocessing import create_sliding_windows
 from qq_forecasting.lstm.lstm_model import LSTM
 from qq_forecasting.lstm.train_lstm import train_lstm
 from qq_forecasting.lstm.evaluate_lstm import predict_lstm
-from qq_forecasting.utils.plotting import plot_forecast_vs_actual
+from qq_forecasting.common.plotting import plot_forecast_vs_actual
 
 # ===============================
 # Load and Preprocess Data

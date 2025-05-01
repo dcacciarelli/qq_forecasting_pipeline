@@ -2,8 +2,8 @@
 
 import yaml
 import os
-from qq_forecasting.utils.load_demand import load_demand_data
-from qq_forecasting.utils.splits import train_val_test_split
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.splits import train_val_test_split
 from qq_forecasting.arima.tuning_arima import tune_arima
 
 def run_arima_tuning(config_path="config/arima_config.yaml"):

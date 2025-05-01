@@ -3,10 +3,10 @@ import torch
 import joblib
 import numpy as np
 
-from qq_forecasting.utils.load_demand import load_demand_data
-from qq_forecasting.utils.preprocessing import create_sliding_windows
+from qq_forecasting.common.load_demand import load_demand_data
+from qq_forecasting.common.preprocessing import create_sliding_windows
 from qq_forecasting.transformer.transformer_model import TransformerEncoder
-from qq_forecasting.utils.plotting import plot_forecast_vs_actual
+from qq_forecasting.common.plotting import plot_forecast_vs_actual
 
 
 def main(config_path="config/transformer_config.yaml"):
