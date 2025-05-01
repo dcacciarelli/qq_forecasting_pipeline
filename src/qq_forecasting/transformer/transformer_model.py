@@ -68,3 +68,33 @@ def train(model, dataloader, num_epochs=10, lr=0.001, scheduler=None):
             scheduler.step()
 
         print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataloader):.4f}")
+
+
+def forecast_next_step(model, recent_window, scaler):
+    """
+    Predict the next value given a recent window of past data.
+
+    Args:
+        model (nn.Module): Trained Transformer model.
+        recent_window (np.ndarray): Latest window of values (unscaled).
+        scaler (sklearn Scaler): Fitted scaler used during training.
+
+    Returns:
+        float: Forecasted next value (unscaled).
+    """
+    model.eval()
+    recent_scaled = scaler.transform(recent_window.reshape(-1, 1)).flatten()
+    x = torch.tensor(recent_scaled, dtype=torch.float32).unsqueeze(-1).unsqueeze(1)  # (seq_len, batch=1, 1)
+
+    with torch.no_grad():
+        pred_scaled = model(x)
+        pred_unscaled = scaler.inverse_transform(pred_scaled.cpu().numpy()).flatten()[0]
+    return pred_unscaled
+
+
+predictions = []
+window = last_48_values.copy()
+for _ in range(48):
+    next_pred = forecast_next_step(model, np.array(window[-window_size:]), scaler)
+    predictions.append(next_pred)
+    window.append(next_pred)
