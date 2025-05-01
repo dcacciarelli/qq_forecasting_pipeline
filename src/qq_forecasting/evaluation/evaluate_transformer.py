@@ -10,14 +10,14 @@ from qq_forecasting.training.train_transformer import train, evaluate
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Running on {device}")
 
-input_window = 48
+input_window = 10
 output_window = 1
-batch_size = 250
+batch_size = 64
 lr = 0.00005
 epochs = 10
 
 df = load_demand_data("data/raw", years=[2019, 2020, 2021, 2022, 2023, 2024])
-series = df["ND"].values[:5000]
+series = df["ND"].values[:1_000]
 scaler = MinMaxScaler()
 series_scaled = scaler.fit_transform(series.reshape(-1, 1)).flatten()
 
@@ -29,7 +29,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
 for epoch in range(1, epochs + 1):
-    train(model, train_data, optimizer, criterion, scheduler, input_window, batch_size, epoch)
+    train(model, train_data, optimizer, criterion, scheduler, batch_size, epoch)
     if epoch == epochs:
         val_loss = evaluate(model, val_data, criterion, input_window, batch_size)
         print(f"Validation loss at final epoch: {val_loss:.6f}")
@@ -39,7 +39,7 @@ model.eval()
 pred, actual = torch.Tensor(0), torch.Tensor(0)
 with torch.no_grad():
     for i in range(len(val_data) - 1):
-        x, y = get_batch(val_data, i, 1, input_window)
+        x, y = get_batch(val_data, i, 1)
         out = model(x)
         pred = torch.cat((pred, out[-1].view(-1).cpu()), 0)
         actual = torch.cat((actual, y[-1].view(-1).cpu()), 0)

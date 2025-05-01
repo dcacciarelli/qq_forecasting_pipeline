@@ -15,12 +15,13 @@ class PositionalEncoding(nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, x):
-        return x + self.pe[:x.size(0), :]
+        return self.pe[:x.size(0), :]
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, feature_size=250, num_layers=1, dropout=0.1):
+    def __init__(self, input_dim=1, feature_size=250, num_layers=1, dropout=0.1):
         super().__init__()
+        self.embedding_layer = nn.Linear(input_dim, feature_size)
         self.src_mask = None
         self.pos_encoder = PositionalEncoding(feature_size)
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=feature_size, nhead=10, dropout=dropout)
@@ -33,12 +34,13 @@ class TransformerEncoder(nn.Module):
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src):
-        if self.src_mask is None or self.src_mask.size(0) != len(src):
-            mask = self._generate_square_subsequent_mask(len(src)).to(src.device)
-            self.src_mask = mask
-        src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, self.src_mask)
+    def forward(self, x):
+        # x: (seq_len, batch_size, input_dim)
+        x = self.embedding_layer(x)  # Embedding layer: project scalar to latent
+        if self.src_mask is None or self.src_mask.size(0) != len(x):
+            self.src_mask = self._generate_square_subsequent_mask(len(x)).to(x.device)
+        x = x + self.pos_encoder(x)
+        output = self.transformer_encoder(x, self.src_mask)
         return self.decoder(output)
 
     def _generate_square_subsequent_mask(self, sz):

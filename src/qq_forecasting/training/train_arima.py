@@ -17,7 +17,7 @@ def train_final_arima(config_path="config/arima_config.yaml", params_path="outpu
 
     # Load data
     df = load_demand_data(config["data"]["folder_path"], years=config["data"]["years"])
-    series = df["national_demand"]
+    series = df["ND"]
     if config["data"]["max_samples"]:
         series = series[:config["data"]["max_samples"]]
 
