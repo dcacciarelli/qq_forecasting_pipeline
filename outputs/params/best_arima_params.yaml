@@ -1,5 +1,5 @@
 order:
-- 2
+- 1
 - 0
 - 1
 seasonal_order:
@@ -8,4 +8,4 @@ seasonal_order:
 - 1
 - 48
 seasonality_period: 48
-validation_rmse: 0.21206606204080902
+validation_rmse: 0.04855823369588472

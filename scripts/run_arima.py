@@ -33,6 +33,7 @@ Q_values = [1]
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).iloc[:200, :]
 val = pd.read_csv(os.path.join(DATA_PATH, "val.csv"))
 test = pd.read_csv(os.path.join(DATA_PATH, "test.csv"))
+scaler = joblib.load(os.path.join(DATA_PATH, "scaler.pkl"))
 
 # ===== TUNE =====
 best_order, best_seasonal_order, _ = tune_arima(
@@ -56,9 +57,6 @@ model = joblib.load(MODEL_SAVE_PATH)
 
 # ===== FORECAST =====
 forecast = forecast_arima(model, steps=len(test))
-
-# ===== LOAD SCALER =====
-scaler = joblib.load(os.path.join(DATA_PATH, "scaler.pkl"))
 
 # ===== INVERSE SCALE =====
 forecast_inv = inverse_scale(np.array(forecast), scaler)

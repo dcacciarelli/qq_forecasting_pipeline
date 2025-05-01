@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import math
+import numpy as np
+from typing import List, Union
 
 
 class PositionalEncoding(nn.Module):
@@ -48,7 +50,7 @@ class TransformerEncoder(nn.Module):
         return mask.float().masked_fill(mask == 0, float("-inf")).masked_fill(mask == 1, 0.0)
 
 
-def train(model, dataloader, num_epochs=10, lr=0.001, scheduler=None):
+def train_transformer(model, dataloader, num_epochs=10, lr=0.001, scheduler=None):
     model.train()
     criterion = nn.MSELoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
@@ -70,31 +72,117 @@ def train(model, dataloader, num_epochs=10, lr=0.001, scheduler=None):
         print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataloader):.4f}")
 
 
-def forecast_next_step(model, recent_window, scaler):
+def forecast_transformer(
+    model: torch.nn.Module,
+    recent_window: Union[np.ndarray, List[float]],
+    steps_ahead: int = 48,
+    device: str = "cpu"
+) -> np.ndarray:
     """
-    Predict the next value given a recent window of past data.
+    Forecast future steps using a trained Transformer model, assuming inputs are already scaled.
 
     Args:
-        model (nn.Module): Trained Transformer model.
-        recent_window (np.ndarray): Latest window of values (unscaled).
-        scaler (sklearn Scaler): Fitted scaler used during training.
+        model (nn.Module): Trained model.
+        recent_window (np.ndarray): Most recent **scaled** values.
+        steps_ahead (int): Number of future steps to forecast.
+        device (str): 'cpu' or 'cuda'.
 
     Returns:
-        float: Forecasted next value (unscaled).
+        np.ndarray: Forecasted values (still scaled).
     """
     model.eval()
-    recent_scaled = scaler.transform(recent_window.reshape(-1, 1)).flatten()
-    x = torch.tensor(recent_scaled, dtype=torch.float32).unsqueeze(-1).unsqueeze(1)  # (seq_len, batch=1, 1)
+    window = list(recent_window[-len(recent_window):])  # make mutable
+    predictions = []
 
-    with torch.no_grad():
-        pred_scaled = model(x)
-        pred_unscaled = scaler.inverse_transform(pred_scaled.cpu().numpy()).flatten()[0]
-    return pred_unscaled
+    for _ in range(steps_ahead):
+        x = torch.tensor(window[-len(recent_window):], dtype=torch.float32).unsqueeze(-1).unsqueeze(1).to(device)
+        with torch.no_grad():
+            pred = model(x).item()  # scalar output
+        predictions.append(pred)
+        window.append(pred)
+
+    return np.array(predictions).flatten()
 
 
-predictions = []
-window = last_48_values.copy()
-for _ in range(48):
-    next_pred = forecast_next_step(model, np.array(window[-window_size:]), scaler)
-    predictions.append(next_pred)
-    window.append(next_pred)
+def forecast_transformer_with_truth(
+    model: torch.nn.Module,
+    context_window: Union[np.ndarray, List[float]],
+    future_values: Union[np.ndarray, List[float]],
+    device: str = "cpu"
+) -> np.ndarray:
+    """
+    Forecast using true future values for evaluation (not autoregressive).
+
+    Args:
+        model (torch.nn.Module): Trained model.
+        context_window (array-like): Initial input window (already scaled).
+        future_values (array-like): True future values to feed for prediction (already scaled).
+        device (str): 'cpu' or 'cuda'.
+
+    Returns:
+        np.ndarray: Model predictions using the true inputs at each step (still scaled).
+    """
+    model.eval()
+    window = list(context_window)
+    predictions = []
+
+    for t in range(len(future_values)):
+        x = torch.tensor(window[-len(context_window):], dtype=torch.float32).unsqueeze(-1).unsqueeze(1).to(device)
+
+        with torch.no_grad():
+            pred = model(x).item()
+
+        predictions.append(pred)
+        # Append the *true* next value, not the predicted one
+        window.append(future_values[t])
+
+    return np.array(predictions)
+
+
+def forecast_multiple_days_autoreg(
+    model: torch.nn.Module,
+    full_series: np.ndarray,
+    window_size: int = 48,
+    horizon: int = 48,
+    num_days: int = 7,
+    device: str = "cpu"
+) -> List[np.ndarray]:
+    """
+    Perform rolling day-ahead forecasts for multiple days,
+    resetting the input context each day to use observed truth.
+
+    Args:
+        model (nn.Module): Trained transformer model.
+        full_series (np.ndarray): Full **unscaled** series (e.g., val + test).
+        scaler (sklearn Scaler): Fitted scaler.
+        window_size (int): Context window length (e.g., 48).
+        horizon (int): Steps to forecast each day (e.g., 48).
+        num_days (int): Number of daily forecasts to make.
+        device (str): 'cpu' or 'cuda'.
+
+    Returns:
+        List[np.ndarray]: Each element is a day-ahead forecast of length `horizon` (unscaled).
+    """
+    model.eval()
+    forecasts = []
+
+    for day in range(num_days):
+        # Get real context window
+        start_idx = day * horizon
+        context = full_series[start_idx : start_idx + window_size]
+
+        preds = []
+        window = list(context)
+
+        for _ in range(horizon):
+            x = torch.tensor(window[-window_size:], dtype=torch.float32).unsqueeze(-1).unsqueeze(1).to(device)
+            with torch.no_grad():
+                pred = model(x).item()
+            preds.append(pred)
+            window.append(pred)  # autoregressive
+
+        # Inverse scale this day's forecast
+        forecasts.append(preds)
+
+    return forecasts
+
