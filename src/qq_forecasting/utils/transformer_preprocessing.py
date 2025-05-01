@@ -2,30 +2,38 @@ import torch
 import numpy as np
 
 
-def create_inout_sequences(data, input_window, output_window):
-    seqs = []
-    L = len(data)
-    for i in range(L - input_window):
-        x = data[i:i + input_window]
-        y = data[i + output_window:i + input_window + output_window]
-        seqs.append((x, y))
-    return torch.FloatTensor(seqs)
+def create_sliding_windows(series, window_size):
+    X, y = [], []
+    for i in range(len(series) - window_size):
+        X.append(series[i:i+window_size])
+        y.append(series[i+window_size])
+    X = torch.tensor(np.array(X), dtype=torch.float32).unsqueeze(-1)  # (N, window, 1)
+    y = torch.tensor(np.array(y), dtype=torch.float32).unsqueeze(-1)  # (N, 1)
+    return X, y
 
 
-def get_data_split(data, split_ratio, input_window, output_window, device):
+def get_data_split(data, split_ratio, window_size, device):
     split = int(len(data) * split_ratio)
     train_data = data[:split]
     test_data = data[split:]
 
-    train_seq = create_inout_sequences(train_data, input_window, output_window)[:-output_window]
-    test_seq = create_inout_sequences(test_data, input_window, output_window)[:-output_window]
+    X_train, y_train = create_sliding_windows(train_data, window_size)
+    X_test, y_test = create_sliding_windows(test_data, window_size)
 
-    return train_seq.to(device), test_seq.to(device)
+    train_seq = torch.utils.data.TensorDataset(X_train.to(device), y_train.to(device))
+    test_seq = torch.utils.data.TensorDataset(X_test.to(device), y_test.to(device))
+
+    return train_seq, test_seq
 
 
-def get_batch(source, i, batch_size, input_window):
-    seq_len = min(batch_size, len(source) - 1 - i)
-    data = source[i:i + seq_len]
-    x = torch.stack(torch.stack([item[0] for item in data]).chunk(input_window, 1))
-    y = torch.stack(torch.stack([item[1] for item in data]).chunk(input_window, 1))
-    return x, y
+def get_batch(dataset, i, batch_size):
+    seq_len = min(batch_size, len(dataset) - i)
+    X_batch = torch.stack([dataset[j][0] for j in range(i, i + seq_len)])
+    y_batch = torch.stack([dataset[j][1] for j in range(i, i + seq_len)])
+
+    # Transformer expects input shape: (input_window, batch_size, 1)
+    X_batch = X_batch.transpose(0, 1)  # (input_window, batch_size, 1)
+    return X_batch, y_batch
+
+
+

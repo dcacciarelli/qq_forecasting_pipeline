@@ -178,4 +178,6 @@ cython_debug/
 
 # Ignore trained models
 outputs/models/*.pkl
+outputs/models/*.pt
+outputs/models/*.pth
 

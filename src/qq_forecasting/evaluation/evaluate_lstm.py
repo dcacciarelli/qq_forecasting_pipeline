@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
 
 from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.utils.lstm_preprocessing import create_sliding_windows
+from qq_forecasting.utils.preprocessing import create_sliding_windows
 from qq_forecasting.models.lstm_model import LSTM
 from qq_forecasting.utils.plotting import plot_forecast_vs_actual
 

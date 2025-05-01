@@ -19,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
 from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.utils.lstm_preprocessing import create_sliding_windows
+from qq_forecasting.utils.preprocessing import create_sliding_windows
 from qq_forecasting.models.lstm_model import LSTM
 from qq_forecasting.training.train_lstm import train_lstm
 from qq_forecasting.evaluation.evaluate_lstm import predict_lstm
