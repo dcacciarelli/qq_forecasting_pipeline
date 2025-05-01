@@ -22,7 +22,7 @@ PLOT_SAVE_PATH = "outputs/results/arima_forecast.png"
 SEASONALITY = 48  # daily seasonality for half-hourly data
 
 # Hyperparameter grid
-p_values = [2]
+p_values = [1, 2]
 d_values = [0]
 q_values = [1]
 P_values = [1]
