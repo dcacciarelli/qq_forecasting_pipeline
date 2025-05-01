@@ -10,7 +10,7 @@ from qq_forecasting.training.train_transformer import train, evaluate
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Running on {device}")
 
-input_window = 10
+input_window = 48
 output_window = 1
 batch_size = 250
 lr = 0.00005
