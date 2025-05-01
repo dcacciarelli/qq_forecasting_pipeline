@@ -13,7 +13,6 @@ from qq_forecasting.utils import (
 FOLDER_PATH = "data/raw"
 YEARS = [2019, 2020, 2021, 2022, 2023, 2024]
 COLUMN_NAME = "ND"
-MAX_TRAINING_SAMPLES = 1000  # None if whole data
 FILL_METHOD = "interpolate"
 SCALE_METHOD = "minmax"
 SAVE_NAME = "electricity_demand"
@@ -30,7 +29,6 @@ plot_univariate_timeseries(series_filled)
 
 # ========== SPLIT ==========
 train, val, test = split_series(series_filled, val_size=VAL_SIZE, test_size=TEST_SIZE)
-train = train[:MAX_TRAINING_SAMPLES]
 
 # ========== SCALE USING TRAIN ==========
 scaled_train, scaler = scale_series(train, method=SCALE_METHOD)

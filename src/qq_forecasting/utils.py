@@ -5,6 +5,7 @@ import torch
 import os
 from typing import List, Optional, Tuple, Literal, Union
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
 def merge_datasets(
@@ -174,14 +175,51 @@ def plot_univariate_timeseries(
     plt.show()
 
 
+def forecast_metrics(actual, forecast, save_path=None, print_scores=False):
 
-def plot_forecast_vs_actual(actual, forecast):
+    actual = np.array(actual)
+    forecast = np.array(forecast)
+
+    mse = mean_squared_error(actual, forecast)
+    rmse = np.sqrt(mse)
+    mae = mean_absolute_error(actual, forecast)
+
+    metrics = {
+        "MSE": mse,
+        "RMSE": rmse,
+        "MAE": mae,
+    }
+
+    if print_scores:
+        for k, v in metrics.items():
+            print(f"{k}: {v:.4f}")
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, "w") as f:
+            for k, v in metrics.items():
+                f.write(f"{k}: {v:.4f}\n")
+
+    return metrics
+
+
+def plot_forecast_vs_actual(actual, forecast, save_path=None, title="Forecast vs Actual"):
+
+    actual = np.array(actual)
+    forecast = np.array(forecast)
+
     plt.figure(figsize=(10, 6), dpi=300)
     plt.plot(actual, label="Actual")
     plt.plot(forecast, label="Forecast", linestyle="--")
-    plt.title("Forecast vs Actual")
+    plt.title(title)
     plt.legend()
     plt.show()
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path)
+        plt.close()
+
 
 
 def create_sliding_windows(series: pd.Series, window_size: int = 10) -> torch.tensor:
