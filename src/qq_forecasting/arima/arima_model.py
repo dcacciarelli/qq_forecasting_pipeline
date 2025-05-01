@@ -4,12 +4,8 @@ import logging
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-def fit_arima_model(
-    series: pd.Series,
-    order: tuple,
-    seasonal_order: tuple,
-    disp: bool = False  # <--- NEW: optional argument
-) -> SARIMAX:
+
+def fit_arima_model(series: pd.Series, order: tuple, seasonal_order: tuple, disp: bool = False) -> SARIMAX:
     """
     Fit a SARIMA model to a time series.
 
@@ -23,13 +19,7 @@ def fit_arima_model(
         SARIMAXResultsWrapper: The fitted model.
     """
     try:
-        model = SARIMAX(
-            series,
-            order=order,
-            seasonal_order=seasonal_order,
-            enforce_stationarity=False,
-            enforce_invertibility=False
-        )
+        model = SARIMAX(series, order=order, seasonal_order=seasonal_order, enforce_stationarity=False, enforce_invertibility=False)
         model_fit = model.fit(disp=disp)  # <--- Use the function argument
         logging.info(f"Fitted SARIMA{order}x{seasonal_order} successfully.")
         return model_fit
@@ -38,7 +28,7 @@ def fit_arima_model(
         raise
 
 
-def forecast_arima(model_fit: SARIMAX, steps: int) -> pd.Series:
+def forecast_arima(model_fit: SARIMAX, steps: int = 1) -> pd.Series:
     """
     Forecast future values using the fitted SARIMA model.
 

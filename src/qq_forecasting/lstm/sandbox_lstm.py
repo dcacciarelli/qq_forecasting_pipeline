@@ -12,18 +12,15 @@ sys.path.append(os.path.abspath("src"))
 # ===============================
 # Imports
 # ===============================
-import pandas as pd
-import torch
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
 
-from qq_forecasting.data.load_demand import load_demand_data
+from qq_forecasting.utils.load_demand import load_demand_data
 from qq_forecasting.utils.preprocessing import create_sliding_windows
-from qq_forecasting.models.lstm_model import LSTM
-from qq_forecasting.training.train_lstm import train_lstm
-from qq_forecasting.evaluation.evaluate_lstm import predict_lstm
-from qq_forecasting.utils.plotting import plot_forecast_vs_actual, plot_univariate_timeseries
+from qq_forecasting.lstm.lstm_model import LSTM
+from qq_forecasting.lstm.train_lstm import train_lstm
+from qq_forecasting.lstm.evaluate_lstm import predict_lstm
+from qq_forecasting.utils.plotting import plot_forecast_vs_actual
 
 # ===============================
 # Load and Preprocess Data

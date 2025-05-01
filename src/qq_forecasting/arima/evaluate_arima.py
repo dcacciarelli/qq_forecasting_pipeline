@@ -3,8 +3,8 @@
 import yaml
 import os
 import joblib
-from qq_forecasting.data.load_demand import load_demand_data
-from qq_forecasting.data.splits import train_val_test_split
+from qq_forecasting.utils.load_demand import load_demand_data
+from qq_forecasting.utils.splits import train_val_test_split
 from qq_forecasting.utils.metrics import evaluate_forecast
 from qq_forecasting.utils.plotting import plot_forecast_vs_actual
 
