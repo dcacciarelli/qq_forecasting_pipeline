@@ -186,3 +186,91 @@ def forecast_multiple_days_autoreg(
 
     return forecasts
 
+
+def forecast_with_daily_resets(
+    model: torch.nn.Module,
+    test_series: Union[np.ndarray, List[float]],
+    context_window: Union[np.ndarray, List[float]],
+    horizon: int = 48,
+    device: str = "cpu"
+) -> np.ndarray:
+    """
+    Forecast full test series in day-ahead blocks:
+    - Each block uses autoregressive prediction for 48 steps.
+    - After each block, reset context window to the true values.
+    - No scaling is applied anywhere.
+
+    Args:
+        model (torch.nn.Module): Trained model (expects raw values).
+        test_series (np.ndarray): True test series (raw).
+        context_window (np.ndarray): Initial input values before test set (raw).
+        horizon (int): Number of steps to predict per day (default: 48).
+        device (str): "cpu" or "cuda".
+
+    Returns:
+        np.ndarray: Full predicted series (same length as test_series).
+    """
+    model.eval()
+    test_series = np.array(test_series)
+    context_window = np.array(context_window)
+    predictions = []
+
+    window_size = len(context_window)
+    num_rounds = int(np.ceil(len(test_series) / horizon))
+
+    for i in range(num_rounds):
+        window = list(context_window.copy())
+        block_preds = []
+
+        for _ in range(horizon):
+            x = torch.tensor(window[-window_size:], dtype=torch.float32).unsqueeze(-1).unsqueeze(1).to(device)
+            with torch.no_grad():
+                pred = model(x).item()
+            block_preds.append(pred)
+            window.append(pred)
+
+        # Clip to remaining test points
+        block_preds = block_preds[:len(test_series) - len(predictions)]
+        predictions.extend(block_preds)
+
+        # Reset context window with true values for next round
+        start = i * horizon
+        end = start + horizon
+        context_window = test_series[start:end]
+        if len(context_window) < window_size:
+            context_window = np.concatenate([test_series[:start], context_window])[-window_size:]
+
+    return np.array(predictions)
+
+
+def forecast_transformer_autoregressive(
+    model: torch.nn.Module,
+    recent_window: Union[np.ndarray, List[float]],
+    steps_ahead: int = 48,
+    device: str = "cpu"
+) -> np.ndarray:
+    """
+    Forecast future steps using a trained Transformer model in an autoregressive way.
+
+    Args:
+        model (nn.Module): Trained model.
+        recent_window (np.ndarray): Most recent **scaled** values.
+        steps_ahead (int): Number of future steps to forecast.
+        device (str): 'cpu' or 'cuda'.
+
+    Returns:
+        np.ndarray: Forecasted values (still scaled).
+    """
+    model.eval()
+    window = list(recent_window)  # ensure it's mutable
+    predictions = []
+
+    for _ in range(steps_ahead):
+        x = torch.tensor(window[-len(recent_window):], dtype=torch.float32).unsqueeze(-1).unsqueeze(1).to(device)
+        with torch.no_grad():
+            pred = model(x).item()
+        predictions.append(pred)
+        window.append(pred)
+
+    return np.array(predictions)
+

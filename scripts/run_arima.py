@@ -36,21 +36,21 @@ test = pd.read_csv(os.path.join(DATA_PATH, "test.csv"))
 scaler = joblib.load(os.path.join(DATA_PATH, "scaler.pkl"))
 
 # ===== TUNE =====
-best_order, best_seasonal_order, _ = tune_arima(
-    train=train,
-    val=val,
-    p_values=p_values,
-    d_values=d_values,
-    q_values=q_values,
-    P_values=P_values,
-    D_values=D_values,
-    Q_values=Q_values,
-    s=SEASONALITY
-)
-
-# ===== TRAIN AND SAVER FINAL MODEL (train + val) =====
-train_val = pd.concat([train, val], ignore_index=True)
-fit_arima(series=train_val, order=best_order, seasonal_order=best_seasonal_order, save_path=MODEL_SAVE_PATH)
+# best_order, best_seasonal_order, _ = tune_arima(
+#     train=train,
+#     val=val,
+#     p_values=p_values,
+#     d_values=d_values,
+#     q_values=q_values,
+#     P_values=P_values,
+#     D_values=D_values,
+#     Q_values=Q_values,
+#     s=SEASONALITY
+# )
+#
+# # ===== TRAIN AND SAVER FINAL MODEL (train + val) =====
+# train_val = pd.concat([train, val], ignore_index=True)
+# fit_arima(series=train_val, order=best_order, seasonal_order=best_seasonal_order, save_path=MODEL_SAVE_PATH)
 
 # ===== LOAD MODEL =====
 model = joblib.load(MODEL_SAVE_PATH)

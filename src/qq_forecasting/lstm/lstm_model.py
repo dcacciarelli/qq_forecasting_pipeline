@@ -3,6 +3,8 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
+from typing import List, Union
 
 
 class LSTM(nn.Module):
@@ -34,3 +36,38 @@ def train_lstm(model, dataloader, num_epochs=10, lr=0.001):
             epoch_loss += loss.item()
 
         print(f"Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss/len(dataloader):.4f}")
+
+
+def forecast_lstm_autoregressive(
+    model: torch.nn.Module,
+    recent_window: Union[np.ndarray, List[float]],
+    steps_ahead: int,
+    window_size: int,
+    device: str = "cpu"
+) -> np.ndarray:
+    """
+    Perform autoregressive forecasting with LSTM by iteratively predicting the next step
+    and feeding it back as input.
+
+    Args:
+        model (torch.nn.Module): Trained LSTM model.
+        recent_window (np.ndarray or list): Initial input sequence (scaled).
+        steps_ahead (int): Number of future steps to predict.
+        window_size (int): Size of input window.
+        device (str): 'cpu' or 'cuda'.
+
+    Returns:
+        np.ndarray: Forecasted values (still scaled).
+    """
+    model.eval()
+    window = list(recent_window[-window_size:])
+    predictions = []
+
+    for _ in range(steps_ahead):
+        x = torch.tensor(window[-window_size:], dtype=torch.float32).unsqueeze(0).unsqueeze(-1).to(device)  # (1, seq_len, 1)
+        with torch.no_grad():
+            pred = model(x).item()
+        predictions.append(pred)
+        window.append(pred)
+
+    return np.array(predictions)

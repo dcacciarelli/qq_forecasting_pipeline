@@ -10,7 +10,8 @@ from qq_forecasting.transformer.transformer_model import (
     train_transformer,
     forecast_transformer,
     forecast_transformer_with_truth,
-    forecast_multiple_days_autoreg
+    forecast_multiple_days_autoreg,
+    forecast_with_daily_resets
 )
 
 from qq_forecasting.utils import (
@@ -29,10 +30,10 @@ PLOT_SAVE_PATH = "outputs/results/transformer_forecast.png"
 
 NUM_LAYERS = 1
 WINDOW_SIZE = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 NUM_EPOCHS = 10
 LEARNING_RATE = 0.0005
-MAX_TRAINING_SAMPLES = 1_000  # Optional limit
+MAX_TRAINING_SAMPLES = 10_000  # Optional limit
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -41,6 +42,7 @@ train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()[:MAX_TRAININ
 val = pd.read_csv(os.path.join(DATA_PATH, "val.csv")).squeeze()
 test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
 scaler = joblib.load(SCALER_PATH)
+actual_values = inverse_scale(test.values, scaler)
 
 # ========== SLIDING WINDOWS ==========
 X_train, y_train = create_sliding_windows(train.values, window_size=WINDOW_SIZE)
@@ -58,16 +60,15 @@ print(f"Transformer model saved to {MODEL_SAVE_PATH}")
 # ========== LOAD MODEL ==========
 loaded_model = TransformerEncoder().to(device)
 loaded_model.load_state_dict(torch.load(MODEL_SAVE_PATH, map_location=device))
-
 print(f"Loaded model from {MODEL_SAVE_PATH}")
 
 # ========== FORECAST ==========
-# predictions = forecast_transformer(
-#     model=model,
-#     recent_window=np.concatenate([train, val])[-WINDOW_SIZE:],
-#     steps_ahead=len(test),
-#     device=device
-# )
+predictions = forecast_transformer(
+    model=model,
+    recent_window=np.concatenate([train, val])[-WINDOW_SIZE:],
+    steps_ahead=len(test),
+    device=device
+)
 
 # Assume test_scaled is already scaled and you want to forecast len(test_scaled) steps
 predictions = forecast_transformer_with_truth(
@@ -79,7 +80,7 @@ predictions = forecast_transformer_with_truth(
 
 
 # ========== EVALUATE ==========
-actual_values = inverse_scale(test.values, scaler)
+
 predicted_values = inverse_scale(predictions, scaler)
 metrics = forecast_metrics(actual_values, predicted_values, save_path=METRICS_SAVE_PATH, print_scores=True)
 plot_forecast_vs_actual(actual_values, predicted_values, save_path=PLOT_SAVE_PATH)
@@ -87,7 +88,7 @@ plot_forecast_vs_actual(actual_values, predicted_values, save_path=PLOT_SAVE_PAT
 full_series = np.concatenate([val.values, test.values])  # unscaled
 WINDOW_SIZE = 48
 HORIZON = 48  # 1 day ahead
-NUM_DAYS = 7  # rolling forecasts
+NUM_DAYS = 30  # rolling forecasts
 
 forecasts = forecast_multiple_days_autoreg(
     model=loaded_model,
@@ -101,8 +102,8 @@ forecasts = forecast_multiple_days_autoreg(
 # ========== VISUALISE OR EVALUATE ==========
 import matplotlib.pyplot as plt
 
-day = 0
-truth = full_series[WINDOW_SIZE + day * HORIZON : WINDOW_SIZE + (day + 1) * HORIZON]
+day = 3
+truth = full_series[WINDOW_SIZE + day * HORIZON: WINDOW_SIZE + (day + 1) * HORIZON]
 
 plt.figure(figsize=(10, 5))
 plt.plot(truth, label="Actual")
@@ -110,4 +111,22 @@ plt.plot(forecasts[day], label="Forecast", linestyle="--")
 plt.title(f"Day {day + 1} Forecast vs Actual")
 plt.legend()
 plt.show()
+
+
+
+context = np.concatenate([train, val])[-WINDOW_SIZE:]
+predictions = forecast_with_daily_resets(
+    model=loaded_model,
+    test_series=test.values,
+    context_window=context,
+    horizon=48,
+    device=device
+)
+
+predicted_values = inverse_scale(predictions, scaler)
+metrics = forecast_metrics(actual_values, predicted_values, save_path=METRICS_SAVE_PATH, print_scores=True)
+plot_forecast_vs_actual(actual_values, predicted_values, save_path=PLOT_SAVE_PATH)
+
+
+
 
