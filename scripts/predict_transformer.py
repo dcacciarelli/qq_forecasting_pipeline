@@ -6,9 +6,7 @@ import pandas as pd
 
 from qq_forecasting.transformer.transformer_model import (
     TransformerEncoder,
-    forecast_with_daily_resets,
-    forecast_transformer_autoregressive,
-    forecast_transformer_with_truth
+    forecast_transformer_autoregressive
 )
 
 from qq_forecasting.utils import (
@@ -24,20 +22,27 @@ SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
 METRICS_SAVE_PATH = "outputs/results/transformer_metrics.txt"
 PLOT_SAVE_PATH = "outputs/results/transformer_forecast.png"
 WINDOW_SIZE = 48
+NUM_LAYERS = 2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
 val = pd.read_csv(os.path.join(DATA_PATH, "val.csv")).squeeze()
-test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
+test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()[:48*7]
 scaler = joblib.load(SCALER_PATH)
 train_val = pd.concat([train, val], ignore_index=True)
 actual_values = inverse_scale(test.values, scaler)
 
 # ========== LOAD MODEL ==========
-loaded_model = TransformerEncoder().to(device)
+loaded_model = TransformerEncoder(num_layers=NUM_LAYERS).to(device)
 loaded_model.load_state_dict(torch.load(MODEL_SAVE_PATH, map_location=device))
+loaded_model.to(device)
+loaded_model.eval()
 print(f"Loaded model from {MODEL_SAVE_PATH}")
+
+# print("Sanity check: model output on random input")
+# dummy = torch.randn(1, WINDOW_SIZE, 1).to(device)
+# print(loaded_model(dummy).item())  # should return a float
 
 # ========== FORECAST ==========
 context_window = train_val[-WINDOW_SIZE:]
@@ -47,12 +52,12 @@ predictions = forecast_transformer_autoregressive(
     steps_ahead=len(test)
 )
 
-predictions = forecast_with_daily_resets(
-    model=loaded_model,
-    test_series=test.values,
-    context_window=context_window,
-    horizon=48
-)
+# predictions = forecast_with_daily_resets(
+#     model=loaded_model,
+#     test_series=test.values,
+#     context_window=context_window,
+#     horizon=48
+# )
 
 # ========== EVALUATE ==========
 predicted_values = inverse_scale(predictions, scaler)

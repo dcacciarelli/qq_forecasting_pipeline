@@ -18,15 +18,15 @@ SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
 METRICS_SAVE_PATH = "outputs/results/lstm_metrics.txt"
 PLOT_SAVE_PATH = "outputs/results/lstm_forecast.png"
 
-WINDOW_SIZE = 48
-HIDDEN_SIZE = 64
-NUM_LAYERS = 2
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# WINDOW_SIZE = 48
+# HIDDEN_SIZE = 32
+# NUM_LAYERS = 3
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
 val = pd.read_csv(os.path.join(DATA_PATH, "val.csv")).squeeze()
-test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
+test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()[:48*7]
 scaler = joblib.load(SCALER_PATH)
 
 train_val = pd.concat([train, val], ignore_index=True)

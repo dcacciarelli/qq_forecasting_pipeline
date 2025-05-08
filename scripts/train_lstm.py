@@ -13,13 +13,13 @@ DATA_PATH = "data/processed/electricity_demand"
 MODEL_SAVE_PATH = "outputs/models/lstm_model.pt"
 SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
 
-NUM_LAYERS = 2
-HIDDEN_SIZE = 64
+NUM_LAYERS = 3
+HIDDEN_SIZE = 48
 WINDOW_SIZE = 48
-BATCH_SIZE = 16
-NUM_EPOCHS = 10
+BATCH_SIZE = 128
+NUM_EPOCHS = 50
 LEARNING_RATE = 0.001
-MAX_TRAINING_SAMPLES = 10_000  # Optional limit
+MAX_TRAINING_SAMPLES = 1_000  # Optional limit
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

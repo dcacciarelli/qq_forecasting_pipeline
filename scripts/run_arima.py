@@ -30,9 +30,9 @@ D_values = [0]
 Q_values = [1]
 
 # ===== LOAD DATA =====
-train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).iloc[:200, :]
-val = pd.read_csv(os.path.join(DATA_PATH, "val.csv"))
-test = pd.read_csv(os.path.join(DATA_PATH, "test.csv"))
+# train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).iloc[:200, :]
+# val = pd.read_csv(os.path.join(DATA_PATH, "val.csv"))
+test = pd.read_csv(os.path.join(DATA_PATH, "test.csv"))[:48*7]
 scaler = joblib.load(os.path.join(DATA_PATH, "scaler.pkl"))
 
 # ===== TUNE =====

@@ -21,12 +21,12 @@ SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
 METRICS_SAVE_PATH = "outputs/results/transformer_metrics.txt"
 PLOT_SAVE_PATH = "outputs/results/transformer_forecast.png"
 
-NUM_LAYERS = 1
+NUM_LAYERS = 2
 WINDOW_SIZE = 48
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 NUM_EPOCHS = 10
 LEARNING_RATE = 0.0005
-MAX_TRAINING_SAMPLES = 10_000  # Optional limit
+MAX_TRAINING_SAMPLES = 1_000  # Optional limit
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
