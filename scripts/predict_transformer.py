@@ -26,7 +26,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
 test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
 scaler = joblib.load(SCALER_PATH)
-actual_values = inverse_scale(test.values, scaler)
 
 # ========== LOAD MODEL ==========
 model = TransformerEncoder(**model_cfg).to(device)
@@ -44,5 +43,5 @@ predictions = forecast_transformer_autoregressive(
 
 # ========== EVALUATE ==========
 predicted_values = inverse_scale(predictions, scaler)
-forecast_metrics(actual_values, predicted_values, save_path=config["paths"]["metrics_path"], print_scores=True)
-plot_forecast_vs_actual(actual_values, predicted_values, save_path=config["paths"]["plot_path"])
+forecast_metrics(test.values, predicted_values, save_path=config["paths"]["metrics_path"], print_scores=True)
+plot_forecast_vs_actual(test.values, predicted_values, save_path=config["paths"]["plot_path"])

@@ -15,40 +15,43 @@ from qq_forecasting.utils import forecast_metrics
 
 
 def fit_arima(
-        series: pd.Series,
-        order: tuple,
-        seasonal_order: tuple,
-        disp: bool = False,
-        save_path: Optional[str] = None
+    series: pd.Series,
+    order: tuple,
+    seasonal_order: tuple,
+    trend=None,
+    enforce_stationarity=False,
+    enforce_invertibility=False,
+    initialization="approximate_diffuse",
+    measurement_error=False,
+    time_varying_regression=False,
+    mle_regression=True,
+    disp=False,
+    save_path: Optional[str] = None
 ) -> SARIMAX:
-    """
-    Fit an ARIMA model to a time series.
-
-    Args:
-        series (pd.Series): The time series data.
-        order (tuple): The (p,d,q) order of the model.
-        seasonal_order (tuple): The (P,D,Q,s) seasonal order.
-        disp (bool, optional): Whether to display optimizer convergence output. Default is False.
-        save_path (str, optional): If provided, saves the fitted model to this file path.
-
-    Returns:
-        SARIMAXResultsWrapper: The fitted model.
-    """
     try:
-        model = SARIMAX(series, order=order, seasonal_order=seasonal_order, enforce_stationarity=False, enforce_invertibility=False)
-        trained_model = model.fit(disp=disp)  # <--- Use the function argument
-        logging.info(f"Fitted ARIMA{order}x{seasonal_order} successfully.")
+        model = SARIMAX(
+            series,
+            order=order,
+            seasonal_order=seasonal_order,
+            trend=trend,
+            enforce_stationarity=enforce_stationarity,
+            enforce_invertibility=enforce_invertibility,
+            initialization=initialization,
+            measurement_error=measurement_error,
+            time_varying_regression=time_varying_regression,
+            mle_regression=mle_regression
+        )
+        trained_model = model.fit(disp=disp)
 
         if save_path:
-            # Save
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             joblib.dump(trained_model, save_path)
-            print(f"ARIMA model trained and saved to {save_path}")
+            print(f"ARIMA model saved to {save_path}")
 
         return trained_model
 
     except Exception as e:
-        logging.error(f"Error fitting ARIMA{order}x{seasonal_order}: {e}")
+        logging.error(f"Error fitting ARIMA: {e}")
         raise
 
 

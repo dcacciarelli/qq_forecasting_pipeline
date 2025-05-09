@@ -1,0 +1,23 @@
+dataset: "demand"
+
+paths:
+  data_path: "data/processed/demand"
+  model_path: "outputs/models/arima_demand.pkl"
+  scaler_path: "data/processed/demand/scaler.pkl"
+  metrics_path: "outputs/results/arima_metrics_demand.txt"
+  plot_path: "outputs/results/arima_forecast_demand.png"
+
+model:
+  order: [2, 0, 1]
+  seasonal_order: [1, 0, 1, 48]
+  enforce_stationarity: false
+  enforce_invertibility: false
+  initialization: "approximate_diffuse"  # or "stationary" or "known"
+  trend: null  # e.g. "c", "t", "ct", or null
+  measurement_error: false
+  time_varying_regression: false
+  mle_regression: true
+
+
+training:
+  max_training_samples: 100

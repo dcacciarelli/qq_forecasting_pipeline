@@ -26,7 +26,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
 test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
 scaler = joblib.load(SCALER_PATH)
-actual_values = inverse_scale(test.values, scaler)
 
 # ========== LOAD MODEL ==========
 model = LSTM(**model_cfg).to(device)
@@ -45,5 +44,5 @@ predictions = forecast_lstm_autoregressive(
 
 # ========== EVALUATE ==========
 predicted_values = inverse_scale(predictions, scaler)
-metrics = forecast_metrics(actual_values, predicted_values, save_path=METRICS_SAVE_PATH, print_scores=True)
-plot_forecast_vs_actual(actual_values, predicted_values, save_path=PLOT_SAVE_PATH)
+metrics = forecast_metrics(test.values, predicted_values, save_path=METRICS_SAVE_PATH, print_scores=True)
+plot_forecast_vs_actual(test.values, predicted_values, save_path=PLOT_SAVE_PATH)
