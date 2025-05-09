@@ -5,7 +5,7 @@ import pandas as pd
 import warnings
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
-from qq_forecasting.arima.arima_model import fit_arima, forecast_arima, tune_arima
+from qq_forecasting.models.arima_model import forecast_arima
 from qq_forecasting.utils import inverse_scale, forecast_metrics, plot_forecast_vs_actual
 
 

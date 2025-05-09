@@ -1,0 +1,22 @@
+dataset: "demand"
+
+paths:
+  data_path: "data/processed/demand"
+  model_path: "outputs/models/transformer_demand.pt"
+  scaler_path: "data/processed/demand/scaler.pkl"
+  metrics_path: "outputs/results/transformer_metrics_demand.txt"
+  plot_path: "outputs/results/transformer_forecast_demand.png"
+
+model:
+  input_dim: 1
+  feature_size: 32
+  num_head: 4
+  num_layers: 2
+  dropout: 0.0
+
+training:
+  window_size: 48
+  batch_size: 16
+  num_epochs: 10
+  learning_rate: 0.0005
+  max_training_samples: 1_000

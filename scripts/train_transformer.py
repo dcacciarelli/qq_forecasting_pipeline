@@ -1,51 +1,39 @@
 import os
+import yaml
 import torch
 import joblib
-import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader, TensorDataset
 
-from qq_forecasting.transformer.transformer_model import (
-    TransformerEncoder,
-    train_transformer
-)
+from qq_forecasting.models.transformer_model import TransformerEncoder, train_transformer
+from qq_forecasting.utils import create_sliding_windows
 
-from qq_forecasting.utils import (
-    create_sliding_windows
-)
+# ========== LOAD CONFIG ==========
+with open("config/transformer_demand.yaml") as f:
+    config = yaml.safe_load(f)
 
-# ========== CONFIG ==========
-DATA_PATH = "data/processed/electricity_demand"
-MODEL_SAVE_PATH = "outputs/models/transformer_model.pt"
-SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
-METRICS_SAVE_PATH = "outputs/results/transformer_metrics.txt"
-PLOT_SAVE_PATH = "outputs/results/transformer_forecast.png"
+DATA_PATH = config["paths"]["data_path"]
+MODEL_SAVE_PATH = config["paths"]["model_path"]
 
-NUM_LAYERS = 2
-WINDOW_SIZE = 48
-BATCH_SIZE = 32
-NUM_EPOCHS = 10
-LEARNING_RATE = 0.0005
-MAX_TRAINING_SAMPLES = 1_000  # Optional limit
+hp = config["training"]
+model_cfg = config["model"]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
-val = pd.read_csv(os.path.join(DATA_PATH, "val.csv")).squeeze()
-test = pd.read_csv(os.path.join(DATA_PATH, "test.csv")).squeeze()
-scaler = joblib.load(SCALER_PATH)
-train_val = pd.concat([train, val], ignore_index=True)[-MAX_TRAINING_SAMPLES:]
+if hp["max_training_samples"]:
+    train = train.iloc[-hp["max_training_samples"]:]
 
 # ========== SLIDING WINDOWS ==========
-X_train, y_train = create_sliding_windows(train_val.values, window_size=WINDOW_SIZE)
-train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=BATCH_SIZE, shuffle=False)
+X_train, y_train = create_sliding_windows(train.values, window_size=hp["window_size"])
+train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=hp["batch_size"], shuffle=False)
 
 # ========== TRAIN ==========
-model = TransformerEncoder(num_layers=NUM_LAYERS).to(device)
-train_transformer(model, train_loader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE)
+model = TransformerEncoder(**model_cfg).to(device)
+train_transformer(model, train_loader, num_epochs=hp["num_epochs"], lr=hp["learning_rate"])
 
-# Save model
-os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
-torch.save(model.state_dict(), MODEL_SAVE_PATH)
-print(f"Transformer model saved to {MODEL_SAVE_PATH}")
+# ========== SAVE ==========
+os.makedirs(os.path.dirname(config["paths"]["model_path"]), exist_ok=True)
+torch.save(model.state_dict(), config["paths"]["model_path"])
+print(f"✅ Transformer model saved to {config['paths']['model_path']}")

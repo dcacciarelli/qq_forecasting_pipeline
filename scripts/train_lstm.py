@@ -1,44 +1,39 @@
 import os
+import yaml
 import torch
 import joblib
-import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader, TensorDataset
 
-from qq_forecasting.lstm.lstm_model import LSTM, train_lstm
+from qq_forecasting.models.lstm_model import LSTM, train_lstm
 from qq_forecasting.utils import create_sliding_windows
 
-# ========== CONFIG ==========
-DATA_PATH = "data/processed/electricity_demand"
-MODEL_SAVE_PATH = "outputs/models/lstm_model.pt"
-SCALER_PATH = os.path.join(DATA_PATH, "scaler.pkl")
+# ========== LOAD CONFIG ==========
+with open("config/lstm_demand.yaml") as f:
+    config = yaml.safe_load(f)
 
-NUM_LAYERS = 3
-HIDDEN_SIZE = 48
-WINDOW_SIZE = 48
-BATCH_SIZE = 128
-NUM_EPOCHS = 50
-LEARNING_RATE = 0.001
-MAX_TRAINING_SAMPLES = 1_000  # Optional limit
+DATA_PATH = config["paths"]["data_path"]
+MODEL_SAVE_PATH = config["paths"]["model_path"]
+
+hp = config["training"]
+model_cfg = config["model"]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
-val = pd.read_csv(os.path.join(DATA_PATH, "val.csv")).squeeze()
-scaler = joblib.load(SCALER_PATH)
-
-train_val = pd.concat([train, val], ignore_index=True)[-MAX_TRAINING_SAMPLES:]
+if hp["max_training_samples"]:
+    train = train.iloc[-hp["max_training_samples"]:]
 
 # ========== SLIDING WINDOWS ==========
-X_train, y_train = create_sliding_windows(train_val.values, window_size=WINDOW_SIZE)
-train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=BATCH_SIZE, shuffle=False)
+X_train, y_train = create_sliding_windows(train.values, window_size=hp["window_size"])
+train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=hp["batch_size"], shuffle=False)
 
 # ========== TRAIN ==========
-model = LSTM(input_size=1, hidden_size=HIDDEN_SIZE, num_layers=NUM_LAYERS).to(device)
-train_lstm(model, train_loader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE)
+model = LSTM(**model_cfg).to(device)
+train_lstm(model, train_loader, num_epochs=hp["num_epochs"], lr=hp["learning_rate"])
 
 # ========== SAVE ==========
 os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
 torch.save(model.state_dict(), MODEL_SAVE_PATH)
-print(f"✅ LSTM model saved to {MODEL_SAVE_PATH}")
+print(f"Trained LSTM model saved to {MODEL_SAVE_PATH}")
