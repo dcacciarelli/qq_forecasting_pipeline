@@ -216,8 +216,6 @@ def plot_forecast_vs_actual(actual, forecast, save_path=None, title=None):
         plt.show()
 
 
-
-
 def create_sliding_windows(series: pd.Series, window_size: int = 10) -> torch.tensor:
     X, y = [], []
     for i in range(len(series) - window_size):
