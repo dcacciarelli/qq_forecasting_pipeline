@@ -69,7 +69,7 @@ def train_transformer(model, dataloader, num_epochs=10, lr=0.001, scheduler=None
         if scheduler:
             scheduler.step()
 
-        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataloader):.4f}")
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss / len(dataloader):.6f}")
 
 
 def forecast_transformer(

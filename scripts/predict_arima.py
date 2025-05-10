@@ -27,9 +27,10 @@ model_path = cfg["paths"]["model_path"]
 print(f"Loaded ARIMA model from {model_path}")
 
 # ===== FORECAST =====
-forecast = forecast_arima(model, steps=len(test))
-forecast_inv = inverse_scale(np.array(forecast), scaler)
+predictions = forecast_arima(model, steps=len(test))
+predicted_values = inverse_scale(np.array(predictions), scaler)
 
 # ===== EVALUATE & PLOT =====
-metrics = forecast_metrics(test.values, forecast_inv, save_path=cfg["paths"]["metrics_path"], print_scores=True)
-plot_forecast_vs_actual(test.values, forecast_inv, save_path=cfg["paths"]["plot_path"])
+metrics = forecast_metrics(test.values, predicted_values, save_path=cfg["paths"]["metrics_path"], print_scores=True)
+plot_forecast_vs_actual(test.values, predicted_values, save_path=cfg["paths"]["plot_path"])
+pd.Series(predicted_values).to_csv(cfg["paths"]["prediction_path"], index=False)

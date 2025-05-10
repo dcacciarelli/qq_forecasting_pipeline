@@ -6,15 +6,17 @@ paths:
   scaler_path: "data/processed/demand/scaler.pkl"
   metrics_path: "outputs/results/lstm_metrics_demand.txt"
   plot_path: "outputs/results/lstm_forecast_demand.png"
+  prediction_path: "outputs/results/lstm_forecast_demand.csv"
 
 model:
   input_size: 1
   hidden_size: 48
   num_layers: 2
+  dropout: 0
 
 training:
   window_size: 48
-  batch_size: 128
-  num_epochs: 100
-  learning_rate: 0.001
-  max_training_samples: 2_000
+  batch_size: 64
+  num_epochs: 200
+  learning_rate: 0.0005
+  max_training_samples: 5_000

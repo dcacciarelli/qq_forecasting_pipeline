@@ -16,6 +16,7 @@ MODEL_SAVE_PATH = config["paths"]["model_path"]
 SCALER_PATH = config["paths"]["scaler_path"]
 METRICS_SAVE_PATH = config["paths"]["metrics_path"]
 PLOT_SAVE_PATH = config["paths"]["plot_path"]
+PREDICTION_PATH = config["paths"]["prediction_path"]
 
 hp = config["training"]
 model_cfg = config["model"]
@@ -31,7 +32,7 @@ scaler = joblib.load(SCALER_PATH)
 model = TransformerEncoder(**model_cfg).to(device)
 model.load_state_dict(torch.load(config["paths"]["model_path"], map_location=device))
 model.eval()
-print(f"✅ Loaded Transformer model from {config['paths']['model_path']}")
+print(f"Loaded Transformer model from {config['paths']['model_path']}")
 
 # ========== FORECAST ==========
 context_window = train[-hp["window_size"]:].values
@@ -45,3 +46,4 @@ predictions = forecast_transformer_autoregressive(
 predicted_values = inverse_scale(predictions, scaler)
 forecast_metrics(test.values, predicted_values, save_path=config["paths"]["metrics_path"], print_scores=True)
 plot_forecast_vs_actual(test.values, predicted_values, save_path=config["paths"]["plot_path"])
+pd.Series(predicted_values).to_csv(PREDICTION_PATH, index=False)

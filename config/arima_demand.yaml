@@ -6,6 +6,7 @@ paths:
   scaler_path: "data/processed/demand/scaler.pkl"
   metrics_path: "outputs/results/arima_metrics_demand.txt"
   plot_path: "outputs/results/arima_forecast_demand.png"
+  prediction_path: "outputs/results/arima_forecast_demand.csv"
 
 model:
   order: [2, 0, 1]
