@@ -8,14 +8,20 @@ from typing import List, Union
 
 
 class LSTM(nn.Module):
-    def __init__(self, input_size=1, hidden_size=64, num_layers=2, output_size=1):
+    def __init__(self, input_size=1, hidden_size=64, num_layers=2, output_size=1, dropout=0.0):
         super(LSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0  # dropout only applies if num_layers > 1
+        )
         self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         out, _ = self.lstm(x)
-        out = out[:, -1, :]  # Take the last time step output
+        out = out[:, -1, :]
         out = self.fc(out)
         return out
 
@@ -35,7 +41,7 @@ def train_lstm(model, dataloader, num_epochs=10, lr=0.001):
             optimizer.step()
             epoch_loss += loss.item()
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss/len(dataloader):.4f}")
+        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss/len(dataloader):.6f}")
 
 
 def forecast_lstm_autoregressive(

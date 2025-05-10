@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
-if hp["max_training_samples"]:
+if hp["max_training_samples"] > 0:
     train = train.iloc[-hp["max_training_samples"]:]
 
 # ========== SLIDING WINDOWS ==========
@@ -36,4 +36,4 @@ train_transformer(model, train_loader, num_epochs=hp["num_epochs"], lr=hp["learn
 # ========== SAVE ==========
 os.makedirs(os.path.dirname(config["paths"]["model_path"]), exist_ok=True)
 torch.save(model.state_dict(), config["paths"]["model_path"])
-print(f"✅ Transformer model saved to {config['paths']['model_path']}")
+print(f"Transformer model saved to {config['paths']['model_path']}")

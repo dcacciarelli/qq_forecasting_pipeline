@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========== LOAD ==========
 train = pd.read_csv(os.path.join(DATA_PATH, "train.csv")).squeeze()
-if hp["max_training_samples"]:
+if hp["max_training_samples"] > 0:
     train = train.iloc[-hp["max_training_samples"]:]
 
 # ========== SLIDING WINDOWS ==========

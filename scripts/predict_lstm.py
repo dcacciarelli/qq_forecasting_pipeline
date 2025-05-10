@@ -16,6 +16,7 @@ MODEL_SAVE_PATH = config["paths"]["model_path"]
 SCALER_PATH = config["paths"]["scaler_path"]
 METRICS_SAVE_PATH = config["paths"]["metrics_path"]
 PLOT_SAVE_PATH = config["paths"]["plot_path"]
+PREDICTION_PATH = config["paths"]["prediction_path"]
 
 hp = config["training"]
 model_cfg = config["model"]
@@ -46,3 +47,4 @@ predictions = forecast_lstm_autoregressive(
 predicted_values = inverse_scale(predictions, scaler)
 metrics = forecast_metrics(test.values, predicted_values, save_path=METRICS_SAVE_PATH, print_scores=True)
 plot_forecast_vs_actual(test.values, predicted_values, save_path=PLOT_SAVE_PATH)
+pd.Series(predicted_values).to_csv(PREDICTION_PATH, index=False)
