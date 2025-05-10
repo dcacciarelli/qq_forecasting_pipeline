@@ -18,17 +18,17 @@ metrics = {
 metrics_df = pd.DataFrame(metrics).T
 
 # Plot
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(12, 6), dpi=300)
 plt.plot(actual.values, label="Actual", color="black", linewidth=2)
-plt.plot(lstm_preds.values, label="LSTM", linestyle="--")
-plt.plot(transformer_preds.values, label="Transformer", linestyle=":")
-plt.plot(arima_preds.values, label="ARIMA", linestyle="-.")
-
-plt.title("Forecast Comparison: LSTM vs Transformer vs ARIMA")
-plt.xlabel("Time step")
-plt.ylabel("Value")
-plt.legend()
-plt.grid(True)
+plt.plot(lstm_preds.values, label="LSTM", linestyle="--", lw=1.5)
+plt.plot(transformer_preds.values, label="Transformer", linestyle=":", lw=1.5)
+plt.plot(arima_preds.values, label="ARIMA", linestyle="-.", lw=1.5)
+plt.xlabel("Settlement Period", fontsize=16)
+plt.ylabel("Load [MW]", fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.legend(fontsize=14)
+plt.grid('y', alpha=.2)
 plt.tight_layout()
 os.makedirs("outputs/results", exist_ok=True)
 plt.savefig("outputs/results/forecast_comparison.png")

@@ -11,8 +11,8 @@ with open("config/arima_demand.yaml", "r") as f:
 
 # ===== LOAD DATA =====
 train = pd.read_csv(os.path.join(cfg["paths"]["data_path"], "train.csv")).squeeze()
-if cfg["model"]["max_training_samples"] > 0:
-    train = train.iloc[-cfg["model"]["max_training_samples"]:]
+if cfg["training"]["max_training_samples"] > 0:
+    train = train.iloc[-cfg["training"]["max_training_samples"]:]
 
 # ===== TRAIN AND SAVE MODEL =====
 model = fit_arima(

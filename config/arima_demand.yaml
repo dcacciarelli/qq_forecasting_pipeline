@@ -21,4 +21,4 @@ model:
 
 
 training:
-  max_training_samples: 100
+  max_training_samples: 0
